@@ -22,6 +22,39 @@ This application uses the Google Gemini API to generate a clinical profile of a 
     poetry run mesop src/app/main.py
     ```
 
+## Deployment
+
+This application can be deployed to Google Cloud Run using the provided `cloudbuild.yaml` file.
+
+### Prerequisites
+
+1.  **Enable Google Cloud services:**
+
+    ```
+    gcloud services enable run.googleapis.com
+    gcloud services enable cloudbuild.googleapis.com
+    gcloud services enable secretmanager.googleapis.com
+    gcloud services enable artifactregistry.googleapis.com
+    ```
+
+2.  **Create a secret for your Google API key:**
+
+    ```
+    echo -n "YOUR_API_KEY" | gcloud secrets create GEMINI_API_KEY --data-file=-
+    ```
+
+3.  **Create an Artifact Registry repository:**
+
+    ```
+    gcloud artifacts repositories create app-repo --repository-format=docker --location=us-central1
+    ```
+
+### Deploy
+
+```
+gcloud builds submit --config cloudbuild.yaml .
+```
+
 ## Clinical Understanding of Psychopathy
 
 "Psychopathy" is a psychological construct defined by a specific cluster of personality traits and behaviors. It is characterized by a combination of interpersonal, affective (emotional), and behavioral deficits.
