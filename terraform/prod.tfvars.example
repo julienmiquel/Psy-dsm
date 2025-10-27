@@ -1,0 +1,7 @@
+project_id    = "your-gcp-project-id"
+location      = "us-central1"
+service_name  = "app-prod"
+repository_id = "app-repo-prod"
+image_name    = "app"
+repo_name     = "your-github-repo-name"
+branch_name   = "main"

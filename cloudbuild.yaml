@@ -13,21 +13,38 @@ steps:
       - 'push'
       - '${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${COMMIT_SHA}'
 
-  # Deploy container image to Cloud Run
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud
+  # Initialize Terraform
+  - name: 'hashicorp/terraform:1.0.0'
     args:
-      - 'run'
-      - 'deploy'
-      - '${_SERVICE_NAME}'
-      - '--image'
-      - '${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${COMMIT_SHA}'
-      - '--region'
-      - '${_LOCATION}'
-      - '--platform'
-      - 'managed'
-      - '--allow-unauthenticated'
-      - '--set-secrets=GOOGLE_API_KEY=GEMINI_API_KEY:latest'
+      - 'init'
+      - '-backend-config=bucket=${_TF_STATE_BUCKET}'
+    dir: 'terraform'
+
+  # Apply Terraform configuration
+  - name: 'hashicorp/terraform:1.0.0'
+    args:
+      - 'apply'
+      - '-auto-approve'
+      - '-var'
+      - 'project_id=${PROJECT_ID}'
+      - '-var'
+      - 'location=${_LOCATION}'
+      - '-var'
+      - 'repository_id=${_REPOSITORY}'
+      - '-var'
+      - 'image_name=${_IMAGE}'
+      - '-var'
+      - 'image_tag=${COMMIT_SHA}'
+      - '-var'
+      - 'tf_state_bucket_name=${_TF_STATE_BUCKET}'
+      - '-var'
+      - 'service_name=${_SERVICE_NAME}'
+      - '-var'
+      - 'repo_name=${_REPO_NAME}'
+      - '-var'
+      - 'branch_name=${_BRANCH_NAME}'
+    dir: 'terraform'
+
 images:
   - '${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${COMMIT_SHA}'
 options:
@@ -36,4 +53,7 @@ substitutions:
   _LOCATION: 'us-central1'
   _REPOSITORY: 'app-repo'
   _IMAGE: 'app'
+  _TF_STATE_BUCKET: 'your-terraform-state-bucket'
   _SERVICE_NAME: 'app-service'
+  _REPO_NAME: 'your-github-repo-name'
+  _BRANCH_NAME: 'main'
