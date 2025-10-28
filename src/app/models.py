@@ -14,9 +14,21 @@ class DiagnosisEntry(BaseModel):
     functional_impairment: Optional[str] = Field(None, description="How the disorder impairs the character's life")
     diagnostic_note: Optional[str] = Field(None, description="Clinical notes or differential diagnosis")
 
+class HollandCode(BaseModel):
+    theme: str = Field(description="The dominant Holland Code theme (e.g., 'Social').")
+    score: int = Field(description="Score for the theme (typically 1-10).")
+    description: str = Field(description="Brief description of the theme.")
+
+class HollandCodeAssessment(BaseModel):
+    """Represents a Holland Code (RIASEC) assessment."""
+    riasec_scores: List[HollandCode] = Field(default_factory=list, description="List of RIASEC scores.")
+    top_themes: List[str] = Field(description="The top 2-3 RIASEC themes that best fit the character.")
+    summary: str = Field(description="A summary of the Holland Code assessment.")
+
 class CharacterProfile(BaseModel):
     character_name: str
     profile_date: str = Field(description="Date of profile generation in YYYY-MM-DD format")
     overall_assessment_summary: Optional[str] = Field(None, description="A brief summary of the clinical assessment")
+    holland_code_assessment: Optional[HollandCodeAssessment] = Field(None, description="Holland Code (RIASEC) assessment results.")
     character_id: Optional[str] = None
     diagnoses: List[DiagnosisEntry] = Field(default_factory=list)

@@ -175,36 +175,47 @@ def display_profile(profile: CharacterProfile):
         summary = profile_dict.get('overall_assessment_summary', 'No summary provided.')
         me.text(summary)
 
+        # Display Holland Code Assessment
+        holland_assessment = profile_dict.get('holland_code_assessment')
+        if holland_assessment:
+            me.text("Holland Code (RIASEC) Assessment:", type="headline-6", style=me.Style(margin=me.Margin.all(15, 0, 0, 0)))
+            me.text(f"Top Themes: {', '.join(holland_assessment.get('top_themes', []))}", type="subtitle-2")
+            me.text(f"Summary: {holland_assessment.get('summary', 'No summary provided.')}")
+            with me.box(style=me.Style(margin=me.Margin.all(10, 0, 0, 15))):
+                for score in holland_assessment.get('riasec_scores', []):
+                    me.text(f"- {score.get('theme')}: {score.get('score')}/10", style=me.Style(font_weight="bold"))
+                    me.text(score.get('description'))
+
+
         diagnoses = profile_dict.get('diagnoses', [])
         if not diagnoses:
             me.text("No formal diagnoses were assigned.", style=me.Style(margin=me.Margin.all(15, 0, 0, 0)))
-            return
+        else:
+            me.text("Diagnostic Impressions:", type="headline-6", style=me.Style(margin=me.Margin.all(15, 0, 0, 0)))
+            for dx in diagnoses:
+                with me.box(style=me.Style(margin=me.Margin.all(10, 0, 0, 15))):
+                    me.text(f"{dx.get('disorder_name', 'N/A')} ({dx.get('dsm_code', 'N/A')})", type="subtitle-2")
+                    me.text(f"Category: {dx.get('dsm_category', 'N/A')}", type="body-2")
 
-        me.text("Diagnostic Impressions:", type="headline-6", style=me.Style(margin=me.Margin.all(15, 0, 0, 0)))
-        for dx in diagnoses:
-            with me.box(style=me.Style(margin=me.Margin.all(10, 0, 0, 15))):
-                me.text(f"{dx.get('disorder_name', 'N/A')} ({dx.get('dsm_code', 'N/A')})", type="subtitle-2")
-                me.text(f"Category: {dx.get('dsm_category', 'N/A')}", type="body-2")
+                    specifiers = dx.get('specifiers', [])
+                    if specifiers:
+                        me.text("Specifiers:", style=me.Style(font_weight="bold"))
+                        for s in specifiers:
+                            me.text(f"- {s.get('specifier_type')}: {s.get('value')}")
 
-                specifiers = dx.get('specifiers', [])
-                if specifiers:
-                    me.text("Specifiers:", style=me.Style(font_weight="bold"))
-                    for s in specifiers:
-                        me.text(f"- {s.get('specifier_type')}: {s.get('value')}")
+                    me.text("Criteria Met (Justification):", style=me.Style(font_weight="bold", margin=me.Margin.all(5, 0, 0, 0)))
+                    criteria = dx.get('criteria_met', [])
+                    if criteria:
+                        for c in criteria:
+                            me.text(f"- {c}")
+                    else:
+                        me.text("- None listed.")
 
-                me.text("Criteria Met (Justification):", style=me.Style(font_weight="bold", margin=me.Margin.all(5, 0, 0, 0)))
-                criteria = dx.get('criteria_met', [])
-                if criteria:
-                    for c in criteria:
-                        me.text(f"- {c}")
-                else:
-                    me.text("- None listed.")
+                    me.text("Functional Impairment:", style=me.Style(font_weight="bold", margin=me.Margin.all(5, 0, 0, 0)))
+                    impairment = dx.get('functional_impairment', 'Not specified.')
+                    me.text(impairment)
 
-                me.text("Functional Impairment:", style=me.Style(font_weight="bold", margin=me.Margin.all(5, 0, 0, 0)))
-                impairment = dx.get('functional_impairment', 'Not specified.')
-                me.text(impairment)
-
-                note = dx.get('diagnostic_note')
-                if note:
-                    me.text("Notes:", style=me.Style(font_weight="bold", margin=me.Margin.all(5, 0, 0, 0)))
-                    me.text(note)
+                    note = dx.get('diagnostic_note')
+                    if note:
+                        me.text("Notes:", style=me.Style(font_weight="bold", margin=me.Margin.all(5, 0, 0, 0)))
+                        me.text(note)

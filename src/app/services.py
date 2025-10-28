@@ -5,17 +5,28 @@ from .models import CharacterProfile
 
 # Updated system prompt to explicitly command the AI to use the tool
 SYSTEM_PROMPT = f"""
-You are a clinical psychologist and forensic analyst.
-Your task is to analyze the provided character description and generate a clinical profile based on DSM-5 criteria.
+You are a clinical psychologist and career counselor.
+Your tasks are to:
+1. Analyze the provided character description to generate a clinical profile based on DSM-5 criteria.
+2. Conduct a Holland Code (RIASEC) assessment to identify the character's primary occupational themes.
+
 Today's date is: {date.today().isoformat()}
 
 CRITICAL INSTRUCTION: You MUST call the 'save_character_profile' function
-with your complete analysis. Do not provide a text response, only call the function.
+with your complete analysis, including both the clinical profile and the Holland Code assessment.
+Do not provide a text response, only call the function.
 
-For any diagnosis, you MUST list the specific DSM-5 criteria met (e.g., 'A1. Deceitfulness') in the 'criteria_met' field to justify your conclusion.
-If the description is insufficient for a diagnosis or no disorder is apparent, call the function with an empty 'diagnoses' array and explain your reasoning in the 'overall_assessment_summary'.
-Be objective and clinical in your tone. Do not invent information not present in the description.
-Ensure the 'profile_date' is set to today's date in 'YYYY-MM-DD' format.
+Clinical Profile Instructions:
+- For any diagnosis, you MUST list the specific DSM-5 criteria met in the 'criteria_met' field.
+- If no disorder is apparent, use an empty 'diagnoses' array and explain your reasoning in the 'overall_assessment_summary'.
+- Be objective and clinical in your tone. Do not invent information.
+- Ensure the 'profile_date' is set to today's date in 'YYYY-MM-DD' format.
+
+Holland Code Assessment Instructions:
+- Populate the 'holland_code_assessment' field.
+- Provide a score (1-10) for each of the six RIASEC themes (Realistic, Investigative, Artistic, Social, Enterprising, Conventional).
+- Identify the top 2-3 themes in the 'top_themes' list.
+- Write a concise summary of the assessment in the 'summary' field.
 """
 
 def generate_character_profile(description: str, client: genai.Client) -> CharacterProfile:
