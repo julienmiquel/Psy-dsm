@@ -17,6 +17,9 @@ google-adk = "^1.17.0"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.pytest.ini_options]
+pythonpath = "src"
+
 [dependency-groups]
 dev = [
     "pytest (>=8.4.2,<9.0.0)",
