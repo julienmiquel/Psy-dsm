@@ -6,8 +6,7 @@ This application uses the Google Gemini API to generate a clinical profile of a 
 ## Project Structure
 
 - `src/app`: Contains the main application code.
-  - `main.py`: The entry point for the Mesop application.
-  - `agent.py`:  Handles the interaction with the Gemini API.
+  - `main.py`: The entry point for the Streamlit application.
   - `models.py`: Defines the Pydantic models for the application.
   - `services.py`:  Contains the business logic of the application.
 - `terraform`: Contains the Terraform code for infrastructure as code.
@@ -35,17 +34,36 @@ This application uses the Google Gemini API to generate a clinical profile of a 
 3.  **Run the application:**
 
     ```
-    poetry run mesop src/app/main.py
+    poetry run streamlit run src/app/main.py
     ```
 
 ## Usage
 
 1.  **Enter a character description:**
-    -   Provide a detailed description of the character you want to analyze.
+    -   Provide a detailed description of the character you want to analyze in the text area.
 2.  **Generate a profile:**
     -   Click the "Generate Profile" button to have the Gemini API generate a clinical profile.
 3.  **View the profile:**
-    -   The generated profile will be displayed, including a summary of the character's likely DSM-5 diagnosis, a confidence score, and a detailed explanation.
+    -   The generated profile will be displayed below the button, including a summary of the character's likely DSM-5 diagnosis, a Holland Code assessment, and a detailed explanation.
+
+## Batch Processing
+
+This application includes a batch processing mode that allows you to generate profiles for multiple character descriptions from an input file.
+
+### How to Use
+
+1.  **Create an input file:**
+    -   Create a text file (e.g., `characters.txt`) with one character description per line.
+
+2.  **Run the batch script:**
+    -   Execute the `src/app/batch.py` script from your terminal, providing the input and output file paths as arguments:
+
+    ```
+    poetry run python src/app/batch.py characters.txt profiles.json
+    ```
+
+3.  **View the output:**
+    -   The script will process each description and write the generated profiles to the specified output file (e.g., `profiles.json`) in JSON format.
 
 ## Deployment
 

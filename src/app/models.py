@@ -32,3 +32,23 @@ class CharacterProfile(BaseModel):
     holland_code_assessment: Optional[HollandCodeAssessment] = Field(None, description="Holland Code (RIASEC) assessment results.")
     character_id: Optional[str] = None
     diagnoses: List[DiagnosisEntry] = Field(default_factory=list)
+
+
+
+class Activity(BaseModel):
+    """Représente une intervention ou un exercice spécifique au sein d'un module."""
+    title: str
+    details: List[str] = Field(default_factory=list)
+
+class Module(BaseModel):
+    """Représente un module complet du programme TCC."""
+    title: str
+    session_range: str
+    objective: str
+    activities: List[Activity] = Field(default_factory=list)
+
+class TCCProgram(BaseModel):
+    """Modélise l'ensemble du programme de Thérapie Comportementale et Cognitive."""
+    title: str
+    global_objective: str
+    modules: List[Module] = Field(default_factory=list)

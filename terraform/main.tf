@@ -46,7 +46,7 @@ resource "google_cloud_run_v2_service" "default" {
     containers {
       image = "us-central1-docker.pkg.dev/${var.project_id}/${var.repository_id}/${var.image_name}:${var.image_tag}"
       ports {
-        container_port = 8080
+        container_port = 8501
       }
       resources {
         limits = {

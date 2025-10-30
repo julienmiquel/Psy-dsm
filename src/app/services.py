@@ -1,81 +1,211 @@
 from datetime import date
+import json
+from datetime import date
+import os
+from .models import CharacterProfile, TCCProgram
+
 from google import genai
 from google.genai import types
-from .models import CharacterProfile
 
-# Updated system prompt to explicitly command the AI to use the tool
 SYSTEM_PROMPT = f"""
-You are a clinical psychologist and career counselor.
-Your tasks are to:
-1. Analyze the provided character description to generate a clinical profile based on DSM-5 criteria.
-2. Conduct a Holland Code (RIASEC) assessment to identify the character's primary occupational themes.
+You are a clinical psychologist and career counselor. Your task is to analyze the provided character description and generate a clinical profile in JSON format.
 
 Today's date is: {date.today().isoformat()}
 
-CRITICAL INSTRUCTION: You MUST call the 'save_character_profile' function
-with your complete analysis, including both the clinical profile and the Holland Code assessment.
-Do not provide a text response, only call the function.
+**Instructions:**
 
-Clinical Profile Instructions:
-- For any diagnosis, you MUST list the specific DSM-5 criteria met in the 'criteria_met' field.
-- If no disorder is apparent, use an empty 'diagnoses' array and explain your reasoning in the 'overall_assessment_summary'.
-- Be objective and clinical in your tone. Do not invent information.
-- Ensure the 'profile_date' is set to today's date in 'YYYY-MM-DD' format.
+1.  **Analyze the character description** to identify potential DSM-5 diagnoses and assess their personality using the Holland Code (RIASEC) model.
+2.  **Generate a JSON object** that strictly adheres to the following schema.
+3.  **Output language:** The output must be in French.
 
-Holland Code Assessment Instructions:
-- Populate the 'holland_code_assessment' field.
-- Provide a score (1-10) for each of the six RIASEC themes (Realistic, Investigative, Artistic, Social, Enterprising, Conventional).
-- Identify the top 2-3 themes in the 'top_themes' list.
-- Write a concise summary of the assessment in the 'summary' field.
+**JSON Schema:**
+
+```json
+{{
+  "character_name": "string",
+  "profile_date": "YYYY-MM-DD",
+  "overall_assessment_summary": "string",
+  "holland_code_assessment": {{
+    "riasec_scores": [
+      {{
+        "theme": "Realistic",
+        "score": "integer (1-10)",
+        "description": "string"
+      }},
+      {{
+        "theme": "Investigative",
+        "score": "integer (1-10)",
+        "description": "string"
+      }},
+      {{
+        "theme": "Artistic",
+        "score": "integer (1-10)",
+        "description": "string"
+      }},
+      {{
+        "theme": "Social",
+        "score": "integer (1-10)",
+        "description": "string"
+      }},
+      {{
+        "theme": "Enterprising",
+        "score": "integer (1-10)",
+        "description": "string"
+      }},
+      {{
+        "theme": "Conventional",
+        "score": "integer (1-10)",
+        "description": "string"
+      }}
+    ],
+    "top_themes": ["string", "string"],
+    "summary": "string"
+  }},
+  "diagnoses": [
+    {{
+      "disorder_name": "string",
+      "dsm_category": "string",
+      "criteria_met": ["string"],
+      "specifiers": [
+        {{
+          "specifier_type": "string",
+          "value": "string"
+        }}
+      ],
+      "dsm_code": "string",
+      "functional_impairment": "string",
+      "diagnostic_note": "string"
+    }}
+  ]
+}}
+```
+
+**Important:**
+
+*   If no disorder is apparent, provide an empty `diagnoses` array and explain your reasoning in the `overall_assessment_summary`.
+*   For any diagnosis, you **must** list the specific DSM-5 criteria met in the `criteria_met` field.
+*   Ensure the `profile_date` is set to today's date.
+*   Your output **must** be a single, valid JSON object, without any markdown formatting or extra text.
 """
 
-def generate_character_profile(description: str, client: genai.Client) -> CharacterProfile:
-    """
-    Calls the Gemini API to generate the character profile
-    using the genai.Client() and function calling, then
-    validates the result with Pydantic.
-    """
-    pydantic_schema_dict = CharacterProfile.model_json_schema()
 
-    save_profile_tool = types.FunctionDeclaration(
-        name="save_character_profile",
-        description="Saves the generated clinical profile for the character.",
-        parameters_json_schema=pydantic_schema_dict
+SYSTEM_PROMPT_TCC = f"""
+You are a clinical psychologist and career counselor. 
+Your task is to analyze the clinical profile and create a TCC program adapted to manage disorder in JSON format.
+
+
+**Important:**
+*   Your output **must** be a single, valid JSON object, without any markdown formatting or extra text.
+"""
+
+def get_genai_client() -> genai.Client:
+        client = genai.Client(                                                                                                                                                            
+            vertexai=True,                                                                                                                                                    
+            project=os.getenv("GOOGLE_CLOUD_PROJECT"),                                                                                                                                                    
+            location=os.getenv("GOOGLE_CLOUD_LOCATION"),                                                                                                                                                     
+        ) 
+        return client
+
+def generate_tcc_program(
+    profile: CharacterProfile, model_id: str) -> TCCProgram:
+    
+    generation_config = types.GenerateContentConfig(
+        response_schema=TCCProgram,
+        response_mime_type="application/json",
+        temperature=1.0,
+        top_p=1,
+        max_output_tokens=8192,
+        # safety_settings=self.safety_settings
+        # thinking_config=types.ThinkingConfig(thinking_budget=-1  )
     )
 
-    character_tool_config = types.Tool(function_declarations=[save_profile_tool])
-
-    config = types.GenerateContentConfig(
-        tools=[character_tool_config],
-        tool_config=types.ToolConfig(
-            function_calling_config=types.FunctionCallingConfig(mode='ANY')
-        ),
+    prompt = f"{SYSTEM_PROMPT_TCC}\n\nCharacter PROFILE:\n{profile.model_dump_json()}"
+    client = get_genai_client()
+    response = client.models.generate_content(
+        model=model_id,
+        contents=prompt,
+        config=generation_config,
     )
 
-    try:
-        response = client.models.generate_content(
-            model='gemini-1.5-flash',
-            contents=description,
-            config=config
-        )
+    # Parse the JSON string into the Pydantic model
+    return response.parsed
 
-        if not response.function_calls:
-            if not response.candidates:
-                block_reason = response.prompt_feedback.block_reason
-                safety_ratings = response.prompt_feedback.safety_ratings
-                raise Exception(f"Request was blocked. Reason: {block_reason}. Details: {safety_ratings}")
-            raise Exception("Model did not return a function call. Check prompt or model version.")
 
-        func_call = response.function_calls[0]
+def generate_character_profile(
+    description: str, model_id: str) -> CharacterProfile:
+    """
+    Generates a character profile using a generative model and validates the
+    JSON output against the CharacterProfile Pydantic model.
+    """
+    # try:
+        # generation_config = types.GenerationConfig(
+        #     response_mime_type="application/json",
+        #     response_schema=CharacterProfile,
+        #     temperature=1.0,
+        #     top_p=1,
+        #     max_output_tokens=8192,
+        # )
 
-        if func_call.name != "save_character_profile":
-            raise Exception(f"Unexpected function call: {func_call.name}")
+    generation_config = types.GenerateContentConfig(
+        response_schema=CharacterProfile,
+        response_mime_type="application/json",
+        temperature=1.0,
+        top_p=1,
+        max_output_tokens=8192,
+        # safety_settings=self.safety_settings
+        # thinking_config=types.ThinkingConfig(thinking_budget=-1  )
+    )
 
-        profile_dict = dict(func_call.args)
+    prompt = f"{SYSTEM_PROMPT}\n\nCharacter Description:\n{description}"
+    client = get_genai_client()
+    response = client.models.generate_content(
+        model=model_id,
+        contents=prompt,
+        config=generation_config,
+    )
 
-        profile_model = CharacterProfile.model_validate(profile_dict)
+    # Parse the JSON string into the Pydantic model
+    return response.parsed
 
-        return profile_model
+    # except Exception as e:
+    #     error_message = f"An error occurred during generation or validation: {e}"
+    #     if "response" in locals() and hasattr(response, "text"):
+    #         error_message += f"\nRaw response text: {response.text}"
+    #     raise Exception(error_message) from e
 
-    except Exception as e:
-        raise Exception(f"An error occurred during generation or validation: {e}")
+
+# --- Example Usage ---
+#
+# (This part is just to show you how to call the new function)
+#
+# import os
+# from .models import CharacterProfile # Make sure this import works
+#
+# # 1. Initialize the client as shown in your example
+# client = get_genai_client()
+#
+# # 2. Define your model and prompt
+# # Use a model that supports JSON mode
+# model_id = "gemini-1.5-pro-latest"
+# test_description = (
+#     "Subject is a 30-year-old male software engineer. "
+#     "He reports persistent feelings of anxiety in social situations, "
+#     "actively avoids public speaking, and spends most of his free time "
+#     "on solitary hobbies like coding and complex model building (planes, ships). "
+#     "He is highly organized and detail-oriented, but finds collaborative "
+#     "work 'draining'."
+# )
+#
+# # 3. Call the function
+# try:
+#     profile = generate_character_profile(
+#         description=test_description,
+#         client=client,
+#         model_id=model_id
+#     )
+#     print("Successfully generated profile:")
+#     print(profile.model_dump_json(indent=2))
+#
+# except Exception as e:
+#     print(e)
+#
