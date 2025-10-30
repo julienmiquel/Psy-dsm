@@ -112,7 +112,7 @@ def generate_tcc_program(
     generation_config = types.GenerateContentConfig(
         response_schema=TCCProgram,
         response_mime_type="application/json",
-        temperature=1.0,
+        temperature=0.0,
         top_p=1,
         max_output_tokens=8192,
         # safety_settings=self.safety_settings
@@ -137,19 +137,11 @@ def generate_character_profile(
     Generates a character profile using a generative model and validates the
     JSON output against the CharacterProfile Pydantic model.
     """
-    # try:
-        # generation_config = types.GenerationConfig(
-        #     response_mime_type="application/json",
-        #     response_schema=CharacterProfile,
-        #     temperature=1.0,
-        #     top_p=1,
-        #     max_output_tokens=8192,
-        # )
 
     generation_config = types.GenerateContentConfig(
         response_schema=CharacterProfile,
         response_mime_type="application/json",
-        temperature=1.0,
+        temperature=0.0,
         top_p=1,
         max_output_tokens=8192,
         # safety_settings=self.safety_settings
