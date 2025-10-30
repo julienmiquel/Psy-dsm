@@ -1,7 +1,7 @@
 import pytest
 import matplotlib.pyplot as plt
-from src.app.models import HollandCode, HollandCodeAssessment
-from src.app.visualizations import get_riasec_figures
+from app.models import HollandCode, HollandCodeAssessment
+from app.visualizations import get_riasec_figures
 
 def test_get_riasec_figures():
     """
@@ -36,3 +36,12 @@ def test_get_riasec_figures():
     # Check if the figures can be closed without errors
     plt.close(bar_chart)
     plt.close(radar_chart)
+
+def test_get_riasec_figures_no_assessment():
+    """
+    Tests the get_riasec_figures function to ensure it returns None when the assessment is None.
+    """
+    bar_chart, radar_chart = get_riasec_figures(None)
+
+    assert bar_chart is None
+    assert radar_chart is None
