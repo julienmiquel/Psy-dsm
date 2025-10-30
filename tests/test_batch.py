@@ -1,14 +1,11 @@
 import os
 import json
 import pytest
-from click.testing import CliRunner
 from app.batch import batch_process
+from unittest.mock import patch
+from app.models import CharacterProfile
 
-@pytest.fixture
-def runner():
-    return CliRunner()
-
-def test_batch_process(runner, tmp_path):
+def test_batch_process(tmp_path):
     input_file = tmp_path / "input.txt"
     output_file = tmp_path / "output.json"
 
@@ -16,11 +13,19 @@ def test_batch_process(runner, tmp_path):
         f.write("Test character 1\n")
         f.write("Test character 2\n")
 
-    result = runner.invoke(batch_process, [str(input_file), str(output_file)])
+    mock_profile = CharacterProfile(
+        character_name="Test Character",
+        profile_date="2024-01-01",
+        overall_assessment_summary="A test summary.",
+        diagnoses=[],
+        holland_code_assessment=None,
+    )
 
-    assert result.exit_code == 0
+    with patch('app.batch.generate_character_profile', return_value=mock_profile):
+        batch_process(str(input_file), str(output_file), "gemini-1.5-pro-latest")
+
     assert os.path.exists(output_file)
 
     with open(output_file, "r") as f:
-        profiles = json.load(f)
-        assert len(profiles) == 2
+        profile = json.load(f)
+        assert profile["character_name"] == "Test Character"

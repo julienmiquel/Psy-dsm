@@ -61,6 +61,8 @@ def get_riasec_figures(assessment: HollandCodeAssessment):
     Returns:
         A tuple containing the bar chart and radar chart matplotlib figures.
     """
+    if assessment is None:
+        return None, None
     labels = [score.theme for score in assessment.riasec_scores]
     values = [score.score for score in assessment.riasec_scores]
     

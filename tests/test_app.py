@@ -2,30 +2,65 @@ import pytest
 from unittest.mock import patch, MagicMock
 
 # Import the functions and classes from your main application
-from src.app.models import CharacterProfile
-from src.app.services import generate_character_profile
-from src.app.main import app, State, send_chat_message
+from app.models import CharacterProfile
+from app.services import generate_character_profile
 
-@patch('google.genai.Client')
-def test_generate_character_profile_success(mock_client):
+@patch('app.services.get_genai_client')
+def test_generate_character_profile_success(mock_get_genai_client):
     """
     Tests the successful generation of a character profile.
     """
+    mock_client = MagicMock()
+    mock_get_genai_client.return_value = mock_client
+
     mock_response = MagicMock()
-    mock_function_call = MagicMock()
-    mock_function_call.name = "save_character_profile"
-    mock_function_call.args = {
-        "character_name": "Test Character",
-        "profile_date": "2024-01-01",
-        "overall_assessment_summary": "A test summary.",
-        "diagnoses": [],
-    }
-    mock_response.function_calls = [mock_function_call]
+    mock_profile = CharacterProfile(
+        character_name="Test Character",
+        profile_date="2024-01-01",
+        overall_assessment_summary="A test summary.",
+        diagnoses=[],
+        holland_code_assessment=None,
+    )
+    mock_response.parsed = mock_profile
 
     mock_client.models.generate_content.return_value = mock_response
 
-    profile = generate_character_profile("A test description.", mock_client)
+    profile = generate_character_profile("A test description.", "gemini-1.5-pro-latest")
 
     assert isinstance(profile, CharacterProfile)
     assert profile.character_name == "Test Character"
     assert profile.profile_date == "2024-01-01"
+
+from app.models import TCCProgram
+from app.services import generate_tcc_program
+
+@patch('app.services.get_genai_client')
+def test_generate_tcc_program_success(mock_get_genai_client):
+    """
+    Tests the successful generation of a TCC program.
+    """
+    mock_client = MagicMock()
+    mock_get_genai_client.return_value = mock_client
+
+    mock_response = MagicMock()
+    mock_program = TCCProgram(
+        title="Test Program",
+        global_objective="A test objective.",
+        modules=[],
+    )
+    mock_response.parsed = mock_program
+
+    mock_client.models.generate_content.return_value = mock_response
+
+    profile = CharacterProfile(
+        character_name="Test Character",
+        profile_date="2024-01-01",
+        overall_assessment_summary="A test summary.",
+        diagnoses=[],
+        holland_code_assessment=None,
+    )
+
+    program = generate_tcc_program(profile, "gemini-1.5-pro-latest")
+
+    assert isinstance(program, TCCProgram)
+    assert program.title == "Test Program"
