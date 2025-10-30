@@ -22,7 +22,7 @@ def test_batch_process(tmp_path):
     )
 
     with patch('app.batch.generate_character_profile', return_value=mock_profile):
-        batch_process(str(input_file), str(output_file), "gemini-1.5-pro-latest")
+        batch_process(str(input_file), str(output_file), "gemini-2.5-pro")
 
     assert os.path.exists(output_file)
 

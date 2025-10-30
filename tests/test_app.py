@@ -60,7 +60,7 @@ def test_generate_tcc_program_success(mock_get_genai_client):
         holland_code_assessment=None,
     )
 
-    program = generate_tcc_program(profile, "gemini-1.5-pro-latest")
+    program = generate_tcc_program(profile, "gemini-2.5-pro")
 
     assert isinstance(program, TCCProgram)
     assert program.title == "Test Program"

@@ -186,7 +186,7 @@ def generate_character_profile(
 #
 # # 2. Define your model and prompt
 # # Use a model that supports JSON mode
-# model_id = "gemini-1.5-pro-latest"
+# model_id = "gemini-2.5-pro"
 # test_description = (
 #     "Subject is a 30-year-old male software engineer. "
 #     "He reports persistent feelings of anxiety in social situations, "
