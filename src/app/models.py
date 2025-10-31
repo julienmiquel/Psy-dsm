@@ -31,6 +31,7 @@ class CharacterProfile(BaseModel):
     overall_assessment_summary: Optional[str] = Field(None, description="A brief summary of the clinical assessment")
     holland_code_assessment: Optional[HollandCodeAssessment] = Field(None, description="Holland Code (RIASEC) assessment results.")
     character_id: Optional[str] = None
+    user_id: Optional[str] = None
     diagnoses: List[DiagnosisEntry] = Field(default_factory=list)
 
 
