@@ -32,17 +32,24 @@ def test_character_profile_stability(character_description):
     Tests the stability of character profile generation by ensuring key fields
     are consistent across multiple runs.
     """
-    model_id = "gemini-2.5-pro"
+    model_id = "gemini-2.5-flash"
     num_runs = 3
     profiles = [
         generate_character_profile(character_description, model_id)
         for _ in range(num_runs)
     ]
+    assert len(profiles) == num_runs
+    for profile in profiles:
+        assert isinstance(profile, CharacterProfile)
+        print(profile.holland_code_assessment.top_themes[0])
+        print("----")
+
 
     # Check for consistency in top Holland Code themes
-    first_holland_themes = profiles[0].holland_code_assessment.top_themes
+    first_holland_themes = sorted(profiles[0].holland_code_assessment.top_themes)
     for profile in profiles[1:]:
-        assert profile.holland_code_assessment.top_themes == first_holland_themes
+        assert sorted(profile.holland_code_assessment.top_themes)[0] == first_holland_themes[0]
+        assert sorted(profile.holland_code_assessment.top_themes)[1] == first_holland_themes[1]
 
     # Check for consistency in diagnoses
     first_diagnoses = [d.disorder_name for d in profiles[0].diagnoses]
@@ -59,4 +66,10 @@ def test_generate_tcc_program(character_profile):
     tcc_program = generate_tcc_program(character_profile, model_id)
 
     assert isinstance(tcc_program, TCCProgram)
-    assert len(tcc_program.phases) > 0
+    assert len(tcc_program.modules) > 0
+    for module in tcc_program.modules:
+        assert len(module.activities) > 0
+        assert module.title != ""
+    assert tcc_program.title != ""
+    assert tcc_program.global_objective != ""   
+

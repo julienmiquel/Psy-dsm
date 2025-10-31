@@ -52,3 +52,7 @@ class TCCProgram(BaseModel):
     title: str
     global_objective: str
     modules: List[Module] = Field(default_factory=list)
+
+class EvaluationResult(BaseModel):
+    score: int = Field(description="The quality score from 1 (poor) to 5 (excellent).")
+    rationale: str = Field(description="The rationale for the given score.")

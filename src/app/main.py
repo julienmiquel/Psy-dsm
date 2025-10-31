@@ -22,14 +22,30 @@ if st.button("Generate Profile", type="primary"):
             # try:
                 profile = generate_character_profile(description, "gemini-2.5-pro")
                 st.session_state['profile'] = profile
+                st.session_state['tcc_program'] = None
 
 
 
 if 'profile' in st.session_state:
     display_profile(st.session_state['profile'])
-    st.session_state['tcc_program'] = generate_tcc_program(st.session_state['profile'], "gemini-2.5-pro")
+    if st.session_state['tcc_program'] == None:
+        st.session_state['tcc_program'] = generate_tcc_program(st.session_state['profile'], "gemini-2.5-pro")
 
 if 'tcc_program' in st.session_state:
     st.header("Generated TCC Program")
     tcc_program = st.session_state['tcc_program']
-    st.json(tcc_program.model_dump())
+    
+    st.subheader(tcc_program.title)
+    st.write(f"**Global Objective:** {tcc_program.global_objective}")
+    
+    for i, module in enumerate(tcc_program.modules):
+        st.markdown(f"### Module {i+1}: {module.title}")
+        st.write(f"**Objective:** {module.objective}")
+        st.write(f"**Session Range:** {module.session_range}")
+
+        st.markdown("#### Activities:")
+        for activity in module.activities:
+            st.markdown(f"**- {activity.title}**")
+            for detail in activity.details:
+                st.markdown(f"  - {detail}")
+        st.markdown("---")
