@@ -5,8 +5,9 @@ from unittest.mock import patch, MagicMock
 from app.models import CharacterProfile
 from app.services import generate_character_profile
 
+@patch('app.services.datastore_service.save_profile')
 @patch('app.services.get_genai_client')
-def test_generate_character_profile_success(mock_get_genai_client):
+def test_generate_character_profile_success(mock_get_genai_client, mock_save_profile):
     """
     Tests the successful generation of a character profile.
     """
@@ -25,7 +26,7 @@ def test_generate_character_profile_success(mock_get_genai_client):
 
     mock_client.models.generate_content.return_value = mock_response
 
-    profile = generate_character_profile("A test description.", "gemini-1.5-pro-latest")
+    profile = generate_character_profile("A test description.", "gemini-1.5-pro-latest", "test_user")
 
     assert isinstance(profile, CharacterProfile)
     assert profile.character_name == "Test Character"

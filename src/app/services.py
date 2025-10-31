@@ -3,6 +3,8 @@ import json
 from datetime import date
 import os
 from .models import CharacterProfile, TCCProgram
+from . import datastore_service
+import uuid
 
 from google import genai
 from google.genai import types
@@ -132,7 +134,7 @@ def generate_tcc_program(
 
 
 def generate_character_profile(
-    description: str, model_id: str) -> CharacterProfile:
+    description: str, model_id: str, user_id: str) -> CharacterProfile:
     """
     Generates a character profile using a generative model and validates the
     JSON output against the CharacterProfile Pydantic model.
@@ -157,7 +159,10 @@ def generate_character_profile(
     )
 
     # Parse the JSON string into the Pydantic model
-    return response.parsed
+    profile = response.parsed
+    profile.character_id = str(uuid.uuid4())
+    datastore_service.save_profile(profile, user_id)
+    return profile
 
     # except Exception as e:
     #     error_message = f"An error occurred during generation or validation: {e}"
