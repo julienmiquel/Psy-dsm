@@ -23,7 +23,7 @@ RUN poetry install --no-dev
 COPY src/ ./src/
 
 # Expose the port the app runs on
-EXPOSE 8080
+EXPOSE 8501
 
 # Define the command to run the application
-CMD ["poetry", "run", "mesop", "src/app/main.py", "--port", "8080"]
+CMD ["poetry", "run", "streamlit", "run", "src/app/main.py"]

@@ -10,8 +10,8 @@ packages = [{include = "app", from = "src"}]
 python = ">=3.12,<4.0"
 google-genai = "^1.46.0"
 pydantic = "^2.12.3"
-mesop = "^1.1.0"
 google-adk = "^1.17.0"
+streamlit = "^1.51.0"
 
 [build-system]
 requires = ["poetry-core"]
