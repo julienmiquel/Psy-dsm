@@ -18,6 +18,7 @@ def _init_db():
     PII_PATH.mkdir(parents=True, exist_ok=True)
     USERS_PATH.mkdir(parents=True, exist_ok=True)
     TCC_PROGRAMS_PATH.mkdir(parents=True, exist_ok=True)
+    CHC_PROFILES_PATH.mkdir(parents=True, exist_ok=True)
 
 def save_profile(profile: CharacterProfile, user_id: str):
     """Saves a character profile to the local file system, separating PII."""
