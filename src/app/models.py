@@ -25,17 +25,6 @@ class HollandCodeAssessment(BaseModel):
     top_themes: List[str] = Field(description="The top 2-3 RIASEC themes that best fit the character.")
     summary: str = Field(description="A summary of the Holland Code assessment.")
 
-class CharacterProfile(BaseModel):
-    character_name: str
-    profile_date: str = Field(description="Date of profile generation in YYYY-MM-DD format")
-    overall_assessment_summary: Optional[str] = Field(None, description="A brief summary of the clinical assessment")
-    holland_code_assessment: Optional[HollandCodeAssessment] = Field(None, description="Holland Code (RIASEC) assessment results.")
-    character_id: Optional[str] = None
-    user_id: Optional[str] = None
-    diagnoses: List[DiagnosisEntry] = Field(default_factory=list)
-
-
-
 class Activity(BaseModel):
     """Représente une intervention ou un exercice spécifique au sein d'un module."""
     title: str
@@ -53,3 +42,14 @@ class TCCProgram(BaseModel):
     title: str
     global_objective: str
     modules: List[Module] = Field(default_factory=list)
+
+class CharacterProfile(BaseModel):
+    character_name: str
+    profile_datetime: str = Field(description="Date and time of profile generation in YYYY-MM-DD HH:MM:SS format")
+    overall_assessment_summary: Optional[str] = Field(None, description="A brief summary of the clinical assessment")
+    holland_code_assessment: Optional[HollandCodeAssessment] = Field(None, description="Holland Code (RIASEC) assessment results.")
+    character_id: Optional[str] = None
+    user_id: Optional[str] = None
+    diagnoses: List[DiagnosisEntry] = Field(default_factory=list)
+    raw_text_bloc: Optional[str] = None
+    tcc_program: Optional[TCCProgram] = None

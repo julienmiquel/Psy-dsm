@@ -1,29 +1,97 @@
 import streamlit as st
+from app.chc_models import CHCModel
 from app.models import CharacterProfile
 from app.visualizations import get_riasec_figures
 
-def display_profile(profile: CharacterProfile):
-    """Renders the character profile in the UI."""
+
+def display_chc_profile(profile: CHCModel):
+    """Renders the CHC profile in the UI."""
     profile_dict = profile.model_dump()
 
-    st.header("Generated Clinical Profile")
-    st.subheader(f"Character: {profile_dict.get('character_name', 'N/A')}")
-    st.caption(f"Profile Date: {profile_dict.get('profile_date', 'N/A')}")
+    st.header("Generated CHC Profile")
+    if profile.character_name:
+        st.subheader(f"Character: {profile.character_name}")
+    if profile.profile_datetime:
+        st.write(f"**Profile Datetime:** {profile.profile_datetime}")
+
+    if profile_dict.get('g_factor'):
+        st.subheader(f"General Intelligence (g-factor): {profile_dict.get('g_factor')}")
 
     st.markdown("---")
 
-    st.subheader("Overall Assessment")
-    summary = profile_dict.get('overall_assessment_summary', 'No summary provided.')
-    st.write(summary)
+    st.subheader("Broad Abilities")
+    broad_abilities = profile_dict.get('broad_abilities', [])
+    if not broad_abilities:
+        st.info("No broad abilities were identified.")
+    else:
+        for ability in broad_abilities:
+            with st.expander(f"{ability.get('name')} ({ability.get('id')}) - Score: {ability.get('score', 'N/A')}"):
+                st.write(f"**Description:** {ability.get('description', 'N/A')}")
+                if ability.get('evidence_summary'):
+                    st.write(f"**Evidence Summary:** {ability.get('evidence_summary')}")
 
-    # Display Holland Code Assessment
-    holland_assessment = profile_dict.get('holland_code_assessment')
-    if holland_assessment:
+                narrow_abilities = ability.get('narrow_abilities', [])
+                if narrow_abilities:
+                    st.write("**Narrow Abilities:**")
+                    for narrow in narrow_abilities:
+                        st.markdown(f"- **{narrow.get('name')} ({narrow.get('id')}):** Score: {narrow.get('score', 'N/A')}")
+                        st.markdown(f"  - {narrow.get('description', 'N/A')}")
+                        if narrow.get('evidence_summary'):
+                            st.markdown(f"  - **Evidence Summary:** {narrow.get('evidence_summary')}")
+                else:
+                    st.write("No narrow abilities identified for this broad ability.")
+    
+    if profile_dict.get('poor_coverage_topics'):
+        st.subheader("Topics with Poor Coverage")
+        st.warning("The following topics had poor coverage in the provided text, which may affect the accuracy of the CHC profile:")
+        for topic in profile_dict['poor_coverage_topics']:
+            st.markdown(f"- {topic}")
+
+    st.markdown("---")
+    with st.expander("Full CHC Profile JSON"):
+        st.json(profile_dict)
+
+    if profile.raw_text_bloc:
+        with st.expander("Raw Text Input"):
+            st.text(profile.raw_text_bloc)
+
+
+def display_profile(profile: CharacterProfile):
+    """Renders the character profile in the UI."""
+    st.header(f"Character Profile: {profile.character_name}")
+    st.write(f"**Profile Datetime:** {profile.profile_datetime}")
+
+    if profile.overall_assessment_summary:
+        st.subheader("Overall Assessment Summary")
+        st.write(profile.overall_assessment_summary)
+
+    st.subheader("Diagnoses")
+    if not profile.diagnoses:
+        st.info("No diagnoses were identified.")
+    else:
+        for diagnosis in profile.diagnoses:
+            with st.expander(f"{diagnosis.disorder_name} ({diagnosis.dsm_code})"):
+                st.write(f"**DSM Category:** {diagnosis.dsm_category}")
+                st.write("**Criteria Met:**")
+                for criterion in diagnosis.criteria_met:
+                    st.markdown(f"- {criterion}")
+                if diagnosis.specifiers:
+                    st.write("**Specifiers:**")
+                    for specifier in diagnosis.specifiers:
+                        st.markdown(f"- {specifier.specifier_type}: {specifier.value}")
+                if diagnosis.functional_impairment:
+                    st.write(f"**Functional Impairment:** {diagnosis.functional_impairment}")
+                if diagnosis.diagnostic_note:
+                    st.write(f"**Diagnostic Note:** {diagnosis.diagnostic_note}")
+
+    if profile.holland_code_assessment:
         st.subheader("Holland Code (RIASEC) Assessment")
-        st.write(f"**Top Themes:** {', '.join(holland_assessment.get('top_themes', []))}")
-        st.write(f"**Summary:** {holland_assessment.get('summary', 'No summary provided.')}")
-        for score in holland_assessment.get('riasec_scores', []):
-            st.markdown(f"- **{score.get('theme')}:** {score.get('score')}/10 - {score.get('description')}")
+        assessment = profile.holland_code_assessment
+        st.write(f"**Top Themes:** {', '.join(assessment.top_themes)}")
+        st.write(f"**Summary:** {assessment.summary}")
+
+        for score in assessment.riasec_scores:
+            st.write(f"**{score.theme}:** {score.score} - {score.description}")
 
         bar_chart, radar_chart = get_riasec_figures(profile.holland_code_assessment)
         col1 , col2 = st.columns(2)
@@ -33,46 +101,11 @@ def display_profile(profile: CharacterProfile):
         with col2:
             st.header("RIASEC Profile Radar Chart")
             st.pyplot(radar_chart)
-        # st.header("RIASEC Scores Bar Chart")
-        # st.pyplot(bar_chart)
-
-        # st.header("RIASEC Profile Radar Chart")
-        # st.pyplot(radar_chart)
         st.markdown("---")
-        with st.expander("Full holland assessment JSON"):
-            st.json(holland_assessment)
 
-    diagnoses = profile_dict.get('diagnoses', [])
-    if not diagnoses:
-        st.info("No formal diagnoses were assigned.")
-    else:
-        st.subheader("Diagnostic Impressions")
-        for dx in diagnoses:
-            with st.expander(f"{dx.get('disorder_name', 'N/A')} ({dx.get('dsm_code', 'N/A')})"):
-                st.write(f"**Category:** {dx.get('dsm_category', 'N/A')}")
+    with st.expander("Full Profile JSON"):
+        st.json(profile.model_dump())
 
-                specifiers = dx.get('specifiers', [])
-                if specifiers:
-                    st.write("**Specifiers:**")
-                    for s in specifiers:
-                        st.markdown(f"- {s.get('specifier_type')}: {s.get('value')}")
-
-                st.write("**Criteria Met (Justification):**")
-                criteria = dx.get('criteria_met', [])
-                if criteria:
-                    for c in criteria:
-                        st.markdown(f"- {c}")
-                else:
-                    st.markdown("- None listed.")
-
-                st.write("**Functional Impairment:**")
-                impairment = dx.get('functional_impairment', 'Not specified.')
-                st.write(impairment)
-
-                note = dx.get('diagnostic_note')
-                if note:
-                    st.write("**Notes:**")
-                    st.write(note)
-        st.markdown("---")
-        with st.expander("Full diagnoses JSON"):
-            st.json(diagnoses)
+    if profile.raw_text_bloc:
+        with st.expander("Raw Text Input"):
+            st.text(profile.raw_text_bloc)

@@ -211,3 +211,4 @@ tests/output_fr.json
 tests/output.json
 tests/input_psy.txt
 tests/input.txt
+local_db/

@@ -1,9 +1,8 @@
-from datetime import date
+from datetime import datetime
 import json
-from datetime import date
 import os
 from .models import CharacterProfile, TCCProgram
-from . import datastore_service
+from app.database import db_service
 import uuid
 
 from google import genai
@@ -12,7 +11,7 @@ from google.genai import types
 SYSTEM_PROMPT = f"""
 You are a clinical psychologist and career counselor. Your task is to analyze the provided character description and generate a clinical profile in JSON format.
 
-Today's date is: {date.today().isoformat()}
+Today's date is: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 **Instructions:**
 
@@ -25,7 +24,7 @@ Today's date is: {date.today().isoformat()}
 ```json
 {{
   "character_name": "string",
-  "profile_date": "YYYY-MM-DD",
+  "profile_datetime": "YYYY-MM-DD HH:MM:SS",
   "overall_assessment_summary": "string",
   "holland_code_assessment": {{
     "riasec_scores": [
@@ -86,7 +85,7 @@ Today's date is: {date.today().isoformat()}
 
 *   If no disorder is apparent, provide an empty `diagnoses` array and explain your reasoning in the `overall_assessment_summary`.
 *   For any diagnosis, you **must** list the specific DSM-5 criteria met in the `criteria_met` field.
-*   Ensure the `profile_date` is set to today's date.
+*   Ensure the `profile_datetime` is set to today's date and time.
 *   Your output **must** be a single, valid JSON object, without any markdown formatting or extra text.
 """
 
@@ -160,8 +159,11 @@ def generate_character_profile(
 
     # Parse the JSON string into the Pydantic model
     profile = response.parsed
+    if profile is None:
+        raise Exception("Failed to generate character profile. The model did not return a valid JSON object.")
     profile.character_id = str(uuid.uuid4())
-    datastore_service.save_profile(profile, user_id)
+    profile.raw_text_bloc = description
+    db_service.save_profile(profile, user_id)
     return profile
 
     # except Exception as e:

@@ -1,0 +1,5 @@
+indexes:
+- kind: CharacterProfile
+  properties:
+  - name: user_id
+    direction: asc
