@@ -17,6 +17,43 @@ This application uses the Google Gemini API to generate a clinical profile of a 
 - `Dockerfile`:  Used to containerize the application.
 - `poetry.lock` and `pyproject.toml`:  Defines the project dependencies.
 
+## Data Model
+
+The application uses a set of Pydantic models to represent the data. The core models are:
+
+*   **`CharacterProfile`**: Represents the main clinical profile of a character, including DSM-5 diagnoses and a Holland Code (RIASEC) assessment.
+*   **`CHCModel`**: Represents a cognitive profile based on the Cattell-Horn-Carroll (CHC) model.
+*   **`TCCProgram`**: Represents a cognitive-behavioral therapy (TCC) program.
+*   **`UserProfile`**: Represents a user's profile information.
+
+### Data Linking
+
+The different profiles for a character are linked together using a `character_id`. This ID is a unique identifier for each character.
+
+To provide a more robust and scalable way to manage character data, we use a centralized character index.
+
+#### Centralized Character Index
+
+For local storage, a `character_index.json` file is used to maintain a mapping between a character's PII (Personally Identifiable Information) and their various profiles.
+
+**Structure of `character_index.json`:**
+```json
+{
+  "character_id_123": {
+    "pii": { "character_name": "John Doe" },
+    "profiles": {
+      "character": "local_db/profiles/character_id_123.json",
+      "chc": "local_db/chc/character_id_123.json",
+      "tcc": "local_db/tcc_programs/character_id_123.json"
+    }
+  }
+}
+```
+
+This centralized index provides a single source of truth for all data related to a character, making the system more organized and easier to maintain.
+
+For cloud-based storage (Datastore/Firestore), a similar approach is used with a "CharacterIndex" kind/collection.
+
 ## How to Run
 
 1.  **Install the dependencies:**

@@ -1,3 +1,5 @@
+# TODO: Refactor this service to use the character index service.
+
 from google.cloud import datastore
 from google.cloud.datastore.query import PropertyFilter
 

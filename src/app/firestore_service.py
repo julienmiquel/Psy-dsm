@@ -1,3 +1,5 @@
+# TODO: Refactor this service to use the character index service.
+
 from google.cloud import firestore
 from app.models import CharacterProfile, TCCProgram
 from app.chc_models import CHCModel

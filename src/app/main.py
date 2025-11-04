@@ -39,88 +39,140 @@ if not st.session_state['authenticated']:
         else:
             st.error("Invalid username or password")
 else:
-    tab1, tab2 = st.tabs(["Generator", "User Profile"])
+    if 'character_selected' not in st.session_state:
+        st.session_state['character_selected'] = False
 
-    with tab1:
-        description = st.text_area("Character Description", height=200, placeholder="Enter a detailed description of the character you want to analyze.")
+    if not st.session_state['character_selected']:
+        st.title("Welcome")
+        
+        characters = store_service.get_user_characters(st.session_state['user_id'])
+        character_options = {char['character_name']: char['character_id'] for char in characters}
 
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Generate Profile", type="primary"):
-                if not description:
-                    st.error("Please enter a character description.")
+        if character_options:
+            selected_character_name = st.selectbox("Select a character", list(character_options.keys()))
+
+            if st.button("Load Character"):
+                character_id = character_options[selected_character_name]
+                st.session_state['character_id'] = character_id
+                st.session_state['profile'] = store_service.get_character_profile(character_id)
+                st.session_state['chc_profile'] = store_service.get_chc_profile(character_id)
+                st.session_state['character_selected'] = True
+                st.rerun()
+
+        if st.button("Create New Character"):
+            # Reset session state for new character
+            if "profile" in st.session_state:
+                del st.session_state["profile"]
+            if "chc_profile" in st.session_state:
+                del st.session_state["chc_profile"]
+            if "tcc_program" in st.session_state:
+                del st.session_state["tcc_program"]
+            if "character_id" in st.session_state:
+                del st.session_state["character_id"]
+            st.session_state['character_selected'] = True
+            st.rerun()
+
+    else:
+        tab1, tab2 = st.tabs(["Generator", "User Profile"])
+
+        with tab1:
+            description = st.text_area("Character Description", height=200, placeholder="Enter a detailed description of the character you want to analyze.")
+
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Generate Profile", type="primary"):
+                    if not description:
+                        st.error("Please enter a character description.")
+                    else:
+                        with st.spinner("Generating profile... This may take a moment."):
+                            profile = generate_character_profile(description, "gemini-2.5-pro", st.session_state['user_id'])
+                            st.session_state['profile'] = profile
+                            if 'chc_profile' in st.session_state:
+                                del st.session_state['chc_profile']
+                            if 'tcc_program' in st.session_state:
+                                del st.session_state["tcc_program"]
+
+            with col2:
+                if st.button("Generate CHC Profile"):
+                    if not description:
+                        st.error("Please enter a character description.")
+                    else:
+                        with st.spinner("Generating CHC profile... This may take a moment."):
+                            chc_profile = generate_chc_profile(description, "gemini-2.5-pro", st.session_state['user_id'])
+                            chc_profile.character_id = str(uuid.uuid4())
+                            store_service.save_chc_profile(chc_profile, st.session_state['user_id'])
+                            st.session_state['chc_profile'] = chc_profile
+                            if 'profile' in st.session_state:
+                                del st.session_state['profile']
+                            if 'tcc_program' in st.session_state:
+                                del st.session_state["tcc_program"]
+
+            if 'profile' in st.session_state and st.session_state['profile'] is not None:
+                display_profile(st.session_state['profile'])
+                if st.session_state['profile'].tcc_program:
+                    st.session_state['tcc_program'] = st.session_state['profile'].tcc_program
                 else:
-                    with st.spinner("Generating profile... This may take a moment."):
-                        profile = generate_character_profile(description, "gemini-2.5-pro", st.session_state['user_id'])
-                        st.session_state['profile'] = profile
-                        if 'chc_profile' in st.session_state:
-                            del st.session_state['chc_profile']
-                        if 'tcc_program' in st.session_state:
-                            del st.session_state["tcc_program"]
+                    with st.spinner("Generating TCC program... This may take a moment."):
+                        tcc_program = generate_tcc_program(st.session_state['profile'], "gemini-2.5-pro")
+                        st.session_state['tcc_program'] = tcc_program
+                        store_service.update_profile_with_tcc_program(st.session_state['profile'].character_id, tcc_program)
 
-        with col2:
-            if st.button("Generate CHC Profile"):
-                if not description:
-                    st.error("Please enter a character description.")
-                else:
-                    with st.spinner("Generating CHC profile... This may take a moment."):
-                        chc_profile = generate_chc_profile(description, "gemini-2.5-pro", st.session_state['user_id'])
-                        chc_profile.character_id = str(uuid.uuid4())
-                        store_service.save_chc_profile(chc_profile, st.session_state['user_id'])
-                        st.session_state['chc_profile'] = chc_profile
-                        if 'profile' in st.session_state:
-                            del st.session_state['profile']
-                        if 'tcc_program' in st.session_state:
-                            del st.session_state["tcc_program"]
+            if 'chc_profile' in st.session_state and st.session_state['chc_profile'] is not None:
+                display_chc_profile(st.session_state['chc_profile'])
 
-        if 'profile' in st.session_state and st.session_state['profile'] is not None:
-            display_profile(st.session_state['profile'])
-            if st.session_state['profile'].tcc_program:
-                st.session_state['tcc_program'] = st.session_state['profile'].tcc_program
-            else:
-                with st.spinner("Generating TCC program... This may take a moment."):
-                    tcc_program = generate_tcc_program(st.session_state['profile'], "gemini-2.5-pro")
-                    st.session_state['tcc_program'] = tcc_program
-                    store_service.update_profile_with_tcc_program(st.session_state['profile'].character_id, tcc_program)
+            if 'tcc_program' in st.session_state and st.session_state['tcc_program'] is not None:
+                st.header("Generated TCC Program")
+                tcc_program = st.session_state['tcc_program']
+                
+                st.subheader(tcc_program.title)
+                st.write(f"**Global Objective:** {tcc_program.global_objective}")
+                
+                for i, module in enumerate(tcc_program.modules):
+                    st.markdown(f"### Module {i+1}: {module.title}")
+                    st.write(f"**Objective:** {module.objective}")
+                    st.write(f"**Session Range:** {module.session_range}")
 
-        if 'chc_profile' in st.session_state and st.session_state['chc_profile'] is not None:
-            display_chc_profile(st.session_state['chc_profile'])
+                    st.markdown("#### Activities:")
+                    for activity in module.activities:
+                        st.markdown(f"**- {activity.title}**")
+                        for detail in activity.details:
+                            st.markdown(f"  - {detail}")
+                    st.markdown("---")
+                with st.expander("View Raw TCC Program JSON"):
+                    st.json(tcc_program.model_dump())
 
-        if 'tcc_program' in st.session_state and st.session_state['tcc_program'] is not None:
-            st.header("Generated TCC Program")
-            tcc_program = st.session_state['tcc_program']
-            
-            st.subheader(tcc_program.title)
-            st.write(f"**Global Objective:** {tcc_program.global_objective}")
-            
-            for i, module in enumerate(tcc_program.modules):
-                st.markdown(f"### Module {i+1}: {module.title}")
-                st.write(f"**Objective:** {module.objective}")
-                st.write(f"**Session Range:** {module.session_range}")
-
-                st.markdown("#### Activities:")
-                for activity in module.activities:
-                    st.markdown(f"**- {activity.title}**")
-                    for detail in activity.details:
-                        st.markdown(f"  - {detail}")
-                st.markdown("---")
-            with st.expander("View Raw TCC Program JSON"):
-                st.json(tcc_program.model_dump())
-
-    with tab2:
-        crm_page()
+        with tab2:
+            crm_page()
 
 
 if 'user_id' in st.session_state:
+    if st.sidebar.button("Back to Character Selection"):
+        st.session_state['character_selected'] = False
+        st.rerun()
+
     st.sidebar.title("History")
-    characters = store_service.get_user_characters(st.session_state['user_id'])
-    for char in characters:
-        if st.sidebar.button(char['character_name'], key=char['character_id']):
-            st.session_state['character_id'] = char['character_id']
-            st.session_state['profile'] = store_service.get_character_profile(char['character_id'])
-            st.session_state['chc_profile'] = store_service.get_chc_profile(char['character_id'])
-            if 'tcc_program' in st.session_state:
-                del st.session_state["tcc_program"]
+    all_profiles = store_service.get_user_all_profiles(st.session_state['user_id'])
+    
+    for profile_entry in all_profiles:
+        display_text = f"{profile_entry['character_name']} ({profile_entry['profile_type']}) - {profile_entry['profile_datetime']}"
+        if st.sidebar.button(display_text, key=f"{profile_entry['character_id']}-{profile_entry['profile_type']}-{profile_entry['profile_datetime']}"):
+            st.session_state['character_id'] = profile_entry['character_id']
+            
+            # Clear existing profiles
+            if 'profile' in st.session_state: del st.session_state['profile']
+            if 'chc_profile' in st.session_state: del st.session_state['chc_profile']
+            if 'tcc_program' in st.session_state: del st.session_state['tcc_program']
+
+            if profile_entry['profile_type'] == "RIASEC":
+                st.session_state['profile'] = store_service.get_character_profile(profile_entry['character_id'])
+            elif profile_entry['profile_type'] == "CHC":
+                st.session_state['chc_profile'] = store_service.get_chc_profile(profile_entry['character_id'])
+            
+            # If a CharacterProfile was loaded, try to load its TCC program
+            if 'profile' in st.session_state and st.session_state['profile'] is not None:
+                if st.session_state['profile'].tcc_program:
+                    st.session_state['tcc_program'] = st.session_state['profile'].tcc_program
+
             st.rerun()
 
     if st.sidebar.button("Clear Selection"):
