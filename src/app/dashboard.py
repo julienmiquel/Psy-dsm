@@ -2,6 +2,7 @@ import streamlit as st
 from app.chc_models import CHCModel
 from app.models import CharacterProfile
 from app.visualizations import get_riasec_figures
+from app.comparison_service import compare_character_profiles, compare_chc_profiles
 
 
 def display_chc_profile(profile: CHCModel):
@@ -54,6 +55,39 @@ def display_chc_profile(profile: CHCModel):
     if profile.raw_text_bloc:
         with st.expander("Raw Text Input"):
             st.text(profile.raw_text_bloc)
+
+def display_comparison(profile1, profile2):
+    """Renders the comparison of two profiles."""
+    st.header("Profile Comparison")
+
+    if isinstance(profile1, CharacterProfile) and isinstance(profile2, CharacterProfile):
+        st.subheader("Comparing Character Profiles (RIASEC)")
+        comparison_result = compare_character_profiles(profile1, profile2)
+
+        st.markdown("#### Overall Assessment Summary Diff")
+        st.text(comparison_result['summary_diff'])
+
+        st.markdown("#### Holland Code (RIASEC) Score Comparison")
+        st.table(comparison_result['holland_comparison'])
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.pyplot(get_riasec_figures(profile1.holland_code_assessment)[1])
+        with col2:
+            st.pyplot(get_riasec_figures(profile2.holland_code_assessment)[1])
+
+    elif isinstance(profile1, CHCModel) and isinstance(profile2, CHCModel):
+        st.subheader("Comparing CHC Profiles")
+        comparison_result = compare_chc_profiles(profile1, profile2)
+
+        st.markdown("#### General Intelligence (g-factor) Comparison")
+        st.table([comparison_result['g_factor_comparison']])
+
+        st.markdown("#### Broad Abilities Comparison")
+        st.table(comparison_result['broad_abilities_comparison'])
+
+    else:
+        st.error("Profile types are incompatible for comparison.")
 
 
 def display_profile(profile: CharacterProfile):

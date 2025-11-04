@@ -25,14 +25,14 @@ def character_description():
 def character_profile(mock_get_genai_client, character_description):
     """Generates a character profile for testing."""
     model_id = "gemini-2.5-pro"
-    with patch('app.services.datastore_service.save_profile'):
+    with patch('app.database.db_service.save_profile'):
         # Mock the response from the generative model
         mock_client = MagicMock()
         mock_get_genai_client.return_value = mock_client
         mock_response = MagicMock()
         mock_profile = CharacterProfile(
             character_name="Test Character",
-            profile_date="2024-01-01",
+            profile_datetime="2024-01-01 12:00:00",
             overall_assessment_summary="A test summary.",
             diagnoses=[],
             holland_code_assessment=None,
@@ -51,14 +51,14 @@ def test_character_profile_stability(mock_get_genai_client, character_descriptio
     """
     model_id = "gemini-2.5-pro"
     num_runs = 3
-    with patch('app.services.datastore_service.save_profile'):
+    with patch('app.database.db_service.save_profile'):
         # Mock the response from the generative model
         mock_client = MagicMock()
         mock_get_genai_client.return_value = mock_client
         mock_response = MagicMock()
         mock_profile = CharacterProfile(
             character_name="Test Character",
-            profile_date="2024-01-01",
+            profile_datetime="2024-01-01 12:00:00",
             overall_assessment_summary="A test summary.",
             diagnoses=[],
             holland_code_assessment=None,
