@@ -3,7 +3,7 @@ import os
 import uuid
 from google import genai
 from app.models import CharacterProfile
-from app.services import generate_character_profile, generate_tcc_program
+from app.services import generate_character_profile, generate_tcc_program, analyze_profile_comparison, combine_character_profiles, generate_detailed_session
 from app.psychometry_chc_generate import generate_chc_profile
 from app.chc_models import CHCModel
 from app.dashboard import display_profile, display_chc_profile, display_comparison
@@ -39,6 +39,10 @@ if not st.session_state['authenticated']:
         else:
             st.error("Invalid username or password")
 else:
+    if st.session_state.get('user_id'):
+        all_profiles = store_service.get_user_all_profiles(st.session_state['user_id'])
+    else:
+        all_profiles = []
     if 'character_selected' not in st.session_state:
         st.session_state['character_selected'] = False
 
@@ -72,44 +76,36 @@ else:
             st.session_state['character_selected'] = True
             st.rerun()
 
+    elif 'combining' in st.session_state and st.session_state['combining']:
+        st.header("Combine Profiles")
+        char_name = st.session_state['combine_character_name']
+        st.subheader(f"Character: {char_name}")
+
+        profiles_to_combine = [p for p in all_profiles if p['character_name'] == char_name and p['profile_type'] == "RIASEC"]
+        
+        selected_profiles_info = []
+        for p in profiles_to_combine:
+            label = f"{p['profile_type']} - {p['profile_datetime']}"
+            if st.checkbox(label, key=f"combine-cb-{p['character_id']}"):
+                selected_profiles_info.append(p)
+
+        if st.button("Merge Selected Profiles"):
+            if len(selected_profiles_info) < 2:
+                st.error("Please select at least two profiles to merge.")
+            else:
+                with st.spinner("Merging profiles..."):
+                    selected_profiles = [store_service.get_character_profile(p['character_id']) for p in selected_profiles_info]
+                    merged_profile = combine_character_profiles(selected_profiles, st.session_state['user_id'])
+                    store_service.save_profile(merged_profile, st.session_state['user_id'])
+                    st.session_state['profile'] = merged_profile
+                    st.session_state['combining'] = False
+                    st.rerun()
+
+        if st.button("Back"):
+            del st.session_state['combining']
+            st.rerun()
+
     else:
-        if 'comparing' in st.session_state and st.session_state['comparing']:
-            st.header("Profile Comparison")
-
-            char_id = st.session_state['compare_character_id']
-            profiles = [p for p in all_profiles if p['character_id'] == char_id]
-
-            profile_options = {f"{p['profile_type']} - {p['profile_datetime']}": p for p in profiles}
-
-            col1, col2 = st.columns(2)
-            with col1:
-                selection1 = st.selectbox("Select Profile 1", list(profile_options.keys()), key="comp_select1")
-            with col2:
-                selection2 = st.selectbox("Select Profile 2", list(profile_options.keys()), key="comp_select2", index=min(1, len(profile_options)-1))
-
-            if st.button("Compare Profiles"):
-                profile_info1 = profile_options[selection1]
-                profile_info2 = profile_options[selection2]
-
-                # Load profiles
-                if profile_info1['profile_type'] == "RIASEC":
-                    st.session_state['compare_profile1'] = store_service.get_character_profile(profile_info1['character_id'])
-                else:
-                    st.session_state['compare_profile1'] = store_service.get_chc_profile(profile_info1['character_id'])
-
-                if profile_info2['profile_type'] == "RIASEC":
-                    st.session_state['compare_profile2'] = store_service.get_character_profile(profile_info2['character_id'])
-                else:
-                    st.session_state['compare_profile2'] = store_service.get_chc_profile(profile_info2['character_id'])
-
-                st.session_state['comparison_ready'] = True
-
-            if st.button("Back to Generator"):
-                del st.session_state['comparing']
-                if 'comparison_ready' in st.session_state:
-                    del st.session_state['comparison_ready']
-                st.rerun()
-
         tabs = ["Generator", "User Profile"]
         if 'comparison_ready' in st.session_state and st.session_state.get('comparison_ready', False):
             tabs.append("Comparison")
@@ -121,6 +117,24 @@ else:
             comparison_tab = tab_objs[2]
             with comparison_tab:
                 display_comparison(st.session_state['compare_profile1'], st.session_state['compare_profile2'])
+
+                if st.button("Analyze Comparison with Gemini"):
+                    with st.spinner("Analyzing comparison..."):
+                        profile1 = st.session_state['compare_profile1']
+                        profile2 = st.session_state['compare_profile2']
+                        if isinstance(profile1, CharacterProfile) and isinstance(profile2, CharacterProfile):
+                            analysis = analyze_profile_comparison(
+                                profile1,
+                                profile2,
+                                "gemini-2.5-pro"
+                            )
+                            st.session_state['comparison_analysis'] = analysis
+                        else:
+                            st.error("Comparison analysis only supports two RIASEC profiles.")
+
+                if 'comparison_analysis' in st.session_state and 'comparison_ready' in st.session_state and st.session_state['comparison_ready']:
+                    st.subheader("Gemini Analysis")
+                    st.markdown(st.session_state['comparison_analysis'])
 
         with tab1:
             description = st.text_area("Character Description", height=200, placeholder="Enter a detailed description of the character you want to analyze.")
@@ -180,8 +194,24 @@ else:
                     st.write(f"**Session Range:** {module.session_range}")
 
                     st.markdown("#### Activities:")
-                    for activity in module.activities:
+                    for j, activity in enumerate(module.activities):
                         st.markdown(f"**- {activity.title}**")
+                        
+                        if st.button(f"Generate Detailed Session for '{activity.title}'", key=f"gen-session-{i}-{j}"):
+                            with st.spinner(f"Generating session for '{activity.title}'..."):
+                                profile = st.session_state.get('profile')
+                                if profile:
+                                    session_details = generate_detailed_session(profile, module, activity)
+                                    if 'detailed_sessions' not in st.session_state:
+                                        st.session_state['detailed_sessions'] = {}
+                                    st.session_state['detailed_sessions'][f"{i}-{j}"] = session_details
+                                else:
+                                    st.error("A full character profile is needed to generate session details.")
+
+                        if 'detailed_sessions' in st.session_state and f"{i}-{j}" in st.session_state['detailed_sessions']:
+                            with st.expander("View Detailed Session Plan"):
+                                st.markdown(st.session_state['detailed_sessions'][f"{i}-{j}"], unsafe_allow_html=True)
+
                         for detail in activity.details:
                             st.markdown(f"  - {detail}")
                     st.markdown("---")
@@ -202,27 +232,26 @@ if 'user_id' in st.session_state:
         st.rerun()
 
     st.sidebar.title("History")
-    all_profiles = store_service.get_user_all_profiles(st.session_state['user_id'])
     
-    # Group profiles by character
+    # Group profiles by character name
     characters_history = {}
     for p in all_profiles:
-        char_id = p['character_id']
-        if char_id not in characters_history:
-            characters_history[char_id] = {
+        char_name = p['character_name']
+        if char_name not in characters_history:
+            characters_history[char_name] = {
                 "name": p['character_name'],
                 "profiles": []
             }
-        characters_history[char_id]['profiles'].append(p)
+        characters_history[char_name]['profiles'].append(p)
 
-    for char_id, char_data in characters_history.items():
+    for char_name, char_data in characters_history.items():
         st.sidebar.markdown(f"**{char_data['name']}**")
 
         col1, col2 = st.sidebar.columns([3,1])
         with col1:
             for profile_entry in char_data['profiles']:
                 display_text = f"({profile_entry['profile_type']}) - {profile_entry['profile_datetime']}"
-                if st.button(display_text, key=f"view-{char_id}-{profile_entry['profile_type']}-{profile_entry['profile_datetime']}"):
+                if st.button(display_text, key=f"view-{profile_entry['character_id']}"):
                     st.session_state['character_id'] = profile_entry['character_id']
 
                     # Clear existing profiles
@@ -241,9 +270,13 @@ if 'user_id' in st.session_state:
 
                     st.rerun()
         with col2:
-            if st.button("Compare", key=f"compare-{char_id}"):
+            if st.button("Compare", key=f"compare-{char_name}"):
                 st.session_state['comparing'] = True
-                st.session_state['compare_character_id'] = char_id
+                st.session_state['compare_character_name'] = char_name
+                st.rerun()
+            if st.button("Combine", key=f"combine-{char_name}"):
+                st.session_state['combining'] = True
+                st.session_state['combine_character_name'] = char_name
                 st.rerun()
 
     if st.sidebar.button("Clear Selection"):

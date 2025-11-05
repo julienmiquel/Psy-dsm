@@ -1,5 +1,8 @@
 Coding Agent guidance:
 
+Only use gemini model id: gemini-2.5-pro or gemini-2.5-flash
+Never use other models.
+
 # Google Agent Development Kit (ADK) Python Cheatsheet
 
 This document serves as a long-form, comprehensive reference for building, orchestrating, and deploying AI agents using the Python Agent Development Kit (ADK). It aims to cover every significant aspect with greater detail, more code examples, and in-depth best practices.
