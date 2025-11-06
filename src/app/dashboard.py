@@ -90,6 +90,29 @@ def display_comparison(profile1, profile2):
         st.error("Profile types are incompatible for comparison.")
 
 
+def display_hexa3d_assessment(assessment):
+    """Renders the Hexa3D assessment in the UI."""
+    st.subheader("Hexa3D Assessment")
+    st.write(f"**Assessment Datetime:** {assessment.assessment_datetime}")
+    st.write(f"**Summary:** {assessment.summary}")
+
+    st.write(f"**Top Themes:** {', '.join(assessment.code_global_top_themes)}")
+    st.write(f"**Differentiation:** {assessment.niveau_differenciation_global}")
+    st.write(f"**Consistency:** {assessment.niveau_consistance_global}")
+
+    for profile_type in ["profil_activites", "profil_qualites", "profil_professions", "profil_global"]:
+        profile_data = getattr(assessment, profile_type)
+        with st.expander(f"{profile_type.replace('_', ' ').title()}"):
+            st.write(f"**Code RIASEC:** {profile_data.code_riasec}")
+            st.write("**Notes Brutes:**")
+            st.json(profile_data.notes_brutes.model_dump_json())
+            st.write("**Notes Etalonnees:**")
+            st.json(profile_data.notes_etalonnees.model_dump_json())
+
+    with st.expander("Dimensions Secondaires"):
+        st.json(assessment.dimensions_secondaires.model_dump_json())
+
+
 def display_profile(profile: CharacterProfile):
     """Renders the character profile in the UI."""
     st.header(f"Character Profile: {profile.character_name}")
@@ -136,6 +159,9 @@ def display_profile(profile: CharacterProfile):
             st.header("RIASEC Profile Radar Chart")
             st.pyplot(radar_chart)
         st.markdown("---")
+
+    if profile.hexa3d_assessment:
+        display_hexa3d_assessment(profile.hexa3d_assessment)
 
     with st.expander("Full Profile JSON"):
         st.json(profile.model_dump())

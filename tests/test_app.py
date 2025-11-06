@@ -5,9 +5,9 @@ from unittest.mock import patch, MagicMock
 from app.models import CharacterProfile
 from app.services import generate_character_profile
 
-@patch('app.services.datastore_service.save_profile')
+@patch('app.database.db_service')
 @patch('app.services.get_genai_client')
-def test_generate_character_profile_success(mock_get_genai_client, mock_save_profile):
+def test_generate_character_profile_success(mock_get_genai_client, mock_db_service):
     """
     Tests the successful generation of a character profile.
     """
@@ -17,7 +17,7 @@ def test_generate_character_profile_success(mock_get_genai_client, mock_save_pro
     mock_response = MagicMock()
     mock_profile = CharacterProfile(
         character_name="Test Character",
-        profile_date="2024-01-01",
+        profile_datetime="2024-01-01 12:00:00",
         overall_assessment_summary="A test summary.",
         diagnoses=[],
         holland_code_assessment=None,
@@ -30,7 +30,7 @@ def test_generate_character_profile_success(mock_get_genai_client, mock_save_pro
 
     assert isinstance(profile, CharacterProfile)
     assert profile.character_name == "Test Character"
-    assert profile.profile_date == "2024-01-01"
+    assert profile.profile_datetime == "2024-01-01 12:00:00"
 
 from app.models import TCCProgram
 from app.services import generate_tcc_program
@@ -55,7 +55,7 @@ def test_generate_tcc_program_success(mock_get_genai_client):
 
     profile = CharacterProfile(
         character_name="Test Character",
-        profile_date="2024-01-01",
+        profile_datetime="2024-01-01 12:00:00",
         overall_assessment_summary="A test summary.",
         diagnoses=[],
         holland_code_assessment=None,

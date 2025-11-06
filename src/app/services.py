@@ -1,7 +1,7 @@
 from datetime import datetime
 import json
 import os
-from .models import CharacterProfile, TCCProgram, HollandCodeAssessment, HollandCode, Module, Activity
+from .models import CharacterProfile, Hexa3DAssessment, TCCProgram, HollandCodeAssessment, HollandCode, Module, Activity
 from app.database import db_service
 import uuid
 
@@ -150,6 +150,119 @@ def generate_character_profile(
     )
 
     prompt = f"{SYSTEM_PROMPT}\n\nCharacter Description:\n{description}"
+    client = get_genai_client()
+    response = client.models.generate_content(
+        model=model_id,
+        contents=prompt,
+        config=generation_config,
+    )
+
+    # Parse the JSON string into the Pydantic model
+    profile = response.parsed
+    if profile is None:
+        raise Exception("Failed to generate character profile. The model did not return a valid JSON object.")
+    profile.character_id = str(uuid.uuid4())
+    profile.raw_text_bloc = description
+    db_service.save_profile(profile, user_id)
+    return profile
+
+
+SYSTEM_PROMPT_HEXA3D = f"""
+You are a clinical psychologist and career counselor. Your task is to analyze the provided character description and generate a clinical profile in JSON format.
+
+Today's date is: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+
+**Instructions:**
+
+1.  **Analyze the character description** to identify potential DSM-5 diagnoses and assess their personality using the Hexa3D model.
+2.  **Generate a JSON object** that strictly adheres to the following schema.
+3.  **Output language:** The output must be in French.
+
+**JSON Schema:**
+
+```json
+{{
+  "character_name": "string",
+  "profile_datetime": "YYYY-MM-DD HH:MM:SS",
+  "overall_assessment_summary": "string",
+  "hexa3d_assessment": {{
+    "assessment_datetime": "YYYY-MM-DD HH:MM:SS",
+    "profil_activites": {{
+      "notes_brutes": {{"R": "int", "I": "int", "A": "int", "S": "int", "E": "int", "C": "int"}},
+      "notes_etalonnees": {{"R": "int", "I": "int", "A": "int", "S": "int", "E": "int", "C": "int"}},
+      "code_riasec": "string"
+    }},
+    "profil_qualites": {{
+      "notes_brutes": {{"R": "int", "I": "int", "A": "int", "S": "int", "E": "int", "C": "int"}},
+      "notes_etalonnees": {{"R": "int", "I": "int", "A": "int", "S": "int", "E": "int", "C": "int"}},
+      "code_riasec": "string"
+    }},
+    "profil_professions": {{
+      "notes_brutes": {{"R": "int", "I": "int", "A": "int", "S": "int", "E": "int", "C": "int"}},
+      "notes_etalonnees": {{"R": "int", "I": "int", "A": "int", "S": "int", "E": "int", "C": "int"}},
+      "code_riasec": "string"
+    }},
+    "profil_global": {{
+      "notes_brutes": {{"R": "int", "I": "int", "A": "int", "S": "int", "E": "int", "C": "int"}},
+      "notes_etalonnees": {{"R": "int", "I": "int", "A": "int", "S": "int", "E": "int", "C": "int"}},
+      "code_riasec": "string"
+    }},
+    "dimensions_secondaires": {{
+      "prestige_eleve": {{"note_brute": "int", "note_etalonnee": "int"}},
+      "prestige_faible": {{"note_brute": "int", "note_etalonnee": "int"}},
+      "masculinite": {{"note_brute": "int", "note_etalonnee": "int"}},
+      "feminite": {{"note_brute": "int", "note_etalonnee": "int"}}
+    }},
+    "code_global_top_themes": ["string", "string", "string"],
+    "niveau_differenciation_global": "string",
+    "niveau_consistance_global": "string",
+    "summary": "string"
+  }},
+  "diagnoses": [
+    {{
+      "disorder_name": "string",
+      "dsm_category": "string",
+      "criteria_met": ["string"],
+      "specifiers": [
+        {{
+          "specifier_type": "string",
+          "value": "string"
+        }}
+      ],
+      "dsm_code": "string",
+      "functional_impairment": "string",
+      "diagnostic_note": "string"
+    }}
+  ]
+}}
+```
+
+**Important:**
+
+*   If no disorder is apparent, provide an empty `diagnoses` array and explain your reasoning in the `overall_assessment_summary`.
+*   For any diagnosis, you **must** list the specific DSM-5 criteria met in the `criteria_met` field.
+*   Ensure the `profile_datetime` is set to today's date and time.
+*   Your output **must** be a single, valid JSON object, without any markdown formatting or extra text.
+"""
+
+def generate_hexa3d_profile(
+    description: str, model_id: str, user_id: str) -> CharacterProfile:
+    """
+    Generates a character profile using a generative model and validates the
+    JSON output against the CharacterProfile Pydantic model.
+    """
+
+    generation_config = types.GenerateContentConfig(
+        response_schema=CharacterProfile,
+        response_mime_type="application/json",
+        temperature=0.0,
+        top_p=1,
+        max_output_tokens=8192,
+        # safety_settings=self.safety_settings
+        # thinking_config=types.ThinkingConfig(thinking_budget=-1  )
+    )
+
+    prompt = f"{SYSTEM_PROMPT_HEXA3D}\n\nCharacter Description:\n{description}"
     client = get_genai_client()
     response = client.models.generate_content(
         model=model_id,

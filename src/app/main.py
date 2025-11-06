@@ -3,7 +3,7 @@ import os
 import uuid
 from google import genai
 from app.models import CharacterProfile
-from app.services import generate_character_profile, generate_tcc_program, analyze_profile_comparison, combine_character_profiles, generate_detailed_session
+from app.services import generate_character_profile, generate_hexa3d_profile, generate_tcc_program, analyze_profile_comparison, combine_character_profiles, generate_detailed_session
 from app.psychometry_chc_generate import generate_chc_profile
 from app.chc_models import CHCModel
 from app.dashboard import display_profile, display_chc_profile, display_comparison
@@ -138,7 +138,7 @@ else:
 
         with tab1:
             description = st.text_area("Character Description", height=200, placeholder="Enter a detailed description of the character you want to analyze.")
-
+            assessment_type = st.radio("Select Assessment Type", ("RIASEC", "Hexa3D"))
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("Generate Profile", type="primary"):
@@ -146,7 +146,10 @@ else:
                         st.error("Please enter a character description.")
                     else:
                         with st.spinner("Generating profile... This may take a moment."):
-                            profile = generate_character_profile(description, "gemini-2.5-pro", st.session_state['user_id'])
+                            if assessment_type == "RIASEC":
+                                profile = generate_character_profile(description, "gemini-2.5-pro", st.session_state['user_id'])
+                            else:
+                                profile = generate_hexa3d_profile(description, "gemini-2.5-pro", st.session_state['user_id'])
                             st.session_state['profile'] = profile
                             if 'chc_profile' in st.session_state:
                                 del st.session_state['chc_profile']

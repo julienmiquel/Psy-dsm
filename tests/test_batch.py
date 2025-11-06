@@ -15,7 +15,7 @@ def test_batch_process(tmp_path):
 
     mock_profile = CharacterProfile(
         character_name="Test Character",
-        profile_date="2024-01-01",
+        profile_datetime="2024-01-01 12:00:00",
         overall_assessment_summary="A test summary.",
         diagnoses=[],
         holland_code_assessment=None,
