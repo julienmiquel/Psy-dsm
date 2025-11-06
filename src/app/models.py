@@ -1,11 +1,18 @@
+"""
+This module defines the Pydantic data models used throughout the application,
+including the main `CharacterProfile` and its various assessment sub-models.
+"""
+
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
 class DiagnosisSpecifier(BaseModel):
+    """A Pydantic model for a diagnosis specifier."""
     specifier_type: str
     value: str
 
 class DiagnosisEntry(BaseModel):
+    """A Pydantic model for a single diagnosis entry."""
     disorder_name: str
     dsm_category: str
     criteria_met: List[str] = Field(default_factory=list, description="Specific DSM-5 criteria codes/text met")
@@ -15,6 +22,7 @@ class DiagnosisEntry(BaseModel):
     diagnostic_note: Optional[str] = Field(None, description="Clinical notes or differential diagnosis")
 
 class HollandCode(BaseModel):
+    """A Pydantic model for a Holland Code."""
     theme: str = Field(description="The dominant Holland Code theme (e.g., 'Social').")
     score: int = Field(description="Score for the theme (typically 1-10).")
     description: str = Field(description="Brief description of the theme.")
@@ -112,6 +120,7 @@ class Hexa3DAssessment(BaseModel):
     summary: Optional[str] = Field(None, description="Synthèse interprétative de l'évaluation Hexa3D")
 
 class CharacterProfile(BaseModel):
+    """The main Pydantic model for a character profile."""
     character_name: str
     profile_datetime: str = Field(description="Date and time of profile generation in YYYY-MM-DD HH:MM:SS format")
     overall_assessment_summary: Optional[str] = Field(None, description="A brief summary of the clinical assessment")

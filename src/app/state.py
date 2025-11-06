@@ -1,5 +1,10 @@
+"""
+This module defines the `AppState` dataclass, which centralizes the management
+of the Streamlit application's session state.
+"""
+
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from app.models import CharacterProfile
 from app.chc_models import CHCModel
 
@@ -7,7 +12,13 @@ from app.chc_models import CHCModel
 class AppState:
     """
     A centralized data class to manage the application's session state.
+
+    Pylint disable justification:
+    - R0902 (too-many-instance-attributes): The state class naturally holds many
+      attributes. This is expected and manageable in this context.
     """
+    # pylint: disable=too-many-instance-attributes
+
     # Authentication
     authenticated: bool = False
     user_id: Optional[str] = None
@@ -17,7 +28,7 @@ class AppState:
     character_id: Optional[str] = None
     profile: Optional[CharacterProfile] = None
     chc_profile: Optional[CHCModel] = None
-    tcc_program: Optional[Any] = None # Using Any to avoid circular import issues if TCCProgram is complex
+    tcc_program: Optional[Any] = None
     detailed_sessions: Dict[str, str] = field(default_factory=dict)
 
     # UI State Flags

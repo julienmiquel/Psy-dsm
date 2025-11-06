@@ -1,3 +1,8 @@
+"""
+This module provides functions to display character profiles and comparisons
+in the Streamlit UI.
+"""
+
 import streamlit as st
 from app.chc_models import CHCModel
 from app.models import CharacterProfile
@@ -16,7 +21,9 @@ def display_chc_profile(profile: CHCModel):
         st.write(f"**Profile Datetime:** {profile.profile_datetime}")
 
     if profile_dict.get('g_factor'):
-        st.subheader(f"General Intelligence (g-factor): {profile_dict.get('g_factor')}")
+        st.subheader(
+            f"General Intelligence (g-factor): {profile_dict.get('g_factor')}"
+        )
 
     st.markdown("---")
 
@@ -26,25 +33,40 @@ def display_chc_profile(profile: CHCModel):
         st.info("No broad abilities were identified.")
     else:
         for ability in broad_abilities:
-            with st.expander(f"{ability.get('name')} ({ability.get('id')}) - Score: {ability.get('score', 'N/A')}"):
+            expander_title = (
+                f"{ability.get('name')} ({ability.get('id')}) - "
+                f"Score: {ability.get('score', 'N/A')}"
+            )
+            with st.expander(expander_title):
                 st.write(f"**Description:** {ability.get('description', 'N/A')}")
                 if ability.get('evidence_summary'):
-                    st.write(f"**Evidence Summary:** {ability.get('evidence_summary')}")
+                    st.write(
+                        f"**Evidence Summary:** {ability.get('evidence_summary')}"
+                    )
 
                 narrow_abilities = ability.get('narrow_abilities', [])
                 if narrow_abilities:
                     st.write("**Narrow Abilities:**")
                     for narrow in narrow_abilities:
-                        st.markdown(f"- **{narrow.get('name')} ({narrow.get('id')}):** Score: {narrow.get('score', 'N/A')}")
+                        narrow_title = (
+                            f"- **{narrow.get('name')} ({narrow.get('id')}):** "
+                            f"Score: {narrow.get('score', 'N/A')}"
+                        )
+                        st.markdown(narrow_title)
                         st.markdown(f"  - {narrow.get('description', 'N/A')}")
                         if narrow.get('evidence_summary'):
-                            st.markdown(f"  - **Evidence Summary:** {narrow.get('evidence_summary')}")
+                            st.markdown(
+                                f"  - **Evidence Summary:** {narrow.get('evidence_summary')}"
+                            )
                 else:
                     st.write("No narrow abilities identified for this broad ability.")
     
     if profile_dict.get('poor_coverage_topics'):
         st.subheader("Topics with Poor Coverage")
-        st.warning("The following topics had poor coverage in the provided text, which may affect the accuracy of the CHC profile:")
+        st.warning(
+            "The following topics had poor coverage in the provided text, "
+            "which may affect the accuracy of the CHC profile:"
+        )
         for topic in profile_dict['poor_coverage_topics']:
             st.markdown(f"- {topic}")
 
@@ -60,7 +82,9 @@ def display_comparison(profile1, profile2):
     """Renders the comparison of two profiles."""
     st.header("Profile Comparison")
 
-    if isinstance(profile1, CharacterProfile) and isinstance(profile2, CharacterProfile):
+    if isinstance(profile1, CharacterProfile) and isinstance(
+        profile2, CharacterProfile
+    ):
         st.subheader("Comparing Character Profiles (RIASEC)")
         comparison_result = compare_character_profiles(profile1, profile2)
 
@@ -100,7 +124,8 @@ def display_hexa3d_assessment(assessment):
     st.write(f"**Differentiation:** {assessment.niveau_differenciation_global}")
     st.write(f"**Consistency:** {assessment.niveau_consistance_global}")
 
-    for profile_type in ["profil_activites", "profil_qualites", "profil_professions", "profil_global"]:
+    profiles = ["profil_activites", "profil_qualites", "profil_professions", "profil_global"]
+    for profile_type in profiles:
         profile_data = getattr(assessment, profile_type)
         with st.expander(f"{profile_type.replace('_', ' ').title()}"):
             st.write(f"**Code RIASEC:** {profile_data.code_riasec}")
@@ -134,10 +159,12 @@ def display_profile(profile: CharacterProfile):
                     st.markdown(f"- {criterion}")
                 if diagnosis.specifiers:
                     st.write("**Specifiers:**")
-                    for specifier in diagnosis.specifiers:
-                        st.markdown(f"- {specifier.specifier_type}: {specifier.value}")
+                    for spec in diagnosis.specifiers:
+                        st.markdown(f"- {spec.specifier_type}: {spec.value}")
                 if diagnosis.functional_impairment:
-                    st.write(f"**Functional Impairment:** {diagnosis.functional_impairment}")
+                    st.write(
+                        f"**Functional Impairment:** {diagnosis.functional_impairment}"
+                    )
                 if diagnosis.diagnostic_note:
                     st.write(f"**Diagnostic Note:** {diagnosis.diagnostic_note}")
 
@@ -150,8 +177,10 @@ def display_profile(profile: CharacterProfile):
         for score in assessment.riasec_scores:
             st.write(f"**{score.theme}:** {score.score} - {score.description}")
 
-        bar_chart, radar_chart = get_riasec_figures(profile.holland_code_assessment)
-        col1 , col2 = st.columns(2)
+        bar_chart, radar_chart = get_riasec_figures(
+            profile.holland_code_assessment
+        )
+        col1, col2 = st.columns(2)
         with col1:
             st.header("RIASEC Scores Bar Chart")
             st.pyplot(bar_chart)
