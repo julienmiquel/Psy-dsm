@@ -1,7 +1,13 @@
-from pydantic import BaseModel, Field
+"""
+This module defines the Pydantic data models for the Cattell-Horn-Carroll (CHC)
+theory of cognitive abilities.
+"""
+
 from typing import List, Optional
+from pydantic import BaseModel, Field
 
 class NarrowAbility(BaseModel):
+    """A Pydantic model for a narrow cognitive ability."""
     id: str = Field(..., description="The ID of the narrow ability.")
     name: str = Field(..., description="The name of the narrow ability.")
     description: str = Field(..., description="A description of the narrow ability.")
@@ -9,6 +15,7 @@ class NarrowAbility(BaseModel):
     evidence_summary: Optional[str] = Field(None, description="A summary of the evidence supporting this narrow ability score.")
 
 class BroadAbility(BaseModel):
+    """A Pydantic model for a broad cognitive ability."""
     id: str = Field(..., description="The ID of the broad ability (e.g., 'Gf', 'Gc').")
     name: str = Field(..., description="The name of the broad ability (e.g., 'Fluid Intelligence').")
     description: str = Field(..., description="A description of the broad ability.")

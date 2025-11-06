@@ -1,8 +1,14 @@
+"""
+This module defines the CRM page for the Streamlit application, allowing users
+to view and edit their profile information.
+"""
+
 import streamlit as st
 from app.database import db_service
 from app.user_models import UserProfile
 
 def crm_page():
+    """Renders the CRM page for user profile management."""
     st.title("User Profile")
 
     user_id = st.session_state.get("user_id")

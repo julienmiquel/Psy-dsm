@@ -1,9 +1,18 @@
+"""
+This module provides functions for generating data visualizations, such as
+bar and radar charts for RIASEC assessments.
+"""
+
+import os
 import matplotlib.pyplot as plt
 import numpy as np
-import os
-from .models import HollandCodeAssessment
 
-def create_riasec_visualizations(assessment: HollandCodeAssessment, output_dir: str = "output"):
+from app.models import HollandCodeAssessment
+
+
+def create_riasec_visualizations(
+    assessment: HollandCodeAssessment, output_dir: str = "output"
+):
     """
     Generates and saves a bar chart and a radar chart for the given RIASEC assessment.
 
@@ -19,7 +28,11 @@ def create_riasec_visualizations(assessment: HollandCodeAssessment, output_dir: 
     
     # Bar Chart
     plt.figure(figsize=(10, 6))
-    plt.bar(labels, values, color=['#FF4136', '#FFDC00', '#0074D9', '#2ECC40', '#FF851B', '#B10DC9'])
+    plt.bar(
+        labels,
+        values,
+        color=['#FF4136', '#FFDC00', '#0074D9', '#2ECC40', '#FF851B', '#B10DC9']
+    )
     plt.title('RIASEC Scores')
     plt.xlabel('Theme')
     plt.ylabel('Score')
@@ -34,7 +47,7 @@ def create_riasec_visualizations(assessment: HollandCodeAssessment, output_dir: 
     values += values[:1]
     angles += angles[:1]
 
-    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+    _, ax = plt.subplots(figsize=(8, 8), subplot_kw={"polar": True})
     ax.fill(angles, values, color='red', alpha=0.25)
     ax.plot(angles, values, color='red', linewidth=2)
     
@@ -67,7 +80,11 @@ def get_riasec_figures(assessment: HollandCodeAssessment):
     
     # Bar Chart
     bar_fig, bar_ax = plt.subplots(figsize=(10, 6))
-    bar_ax.bar(labels, values, color=['#FF4136', '#FFDC00', '#0074D9', '#2ECC40', '#FF851B', '#B10DC9'])
+    bar_ax.bar(
+        labels,
+        values,
+        color=['#FF4136', '#FFDC00', '#0074D9', '#2ECC40', '#FF851B', '#B10DC9']
+    )
     bar_ax.set_title('RIASEC Scores')
     bar_ax.set_xlabel('Theme')
     bar_ax.set_ylabel('Score')
@@ -79,7 +96,7 @@ def get_riasec_figures(assessment: HollandCodeAssessment):
     radar_values = values + values[:1]
     radar_angles = angles + angles[:1]
 
-    radar_fig, radar_ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+    radar_fig, radar_ax = plt.subplots(figsize=(8, 8), subplot_kw={"polar": True})
     radar_ax.fill(radar_angles, radar_values, color='red', alpha=0.25)
     radar_ax.plot(radar_angles, radar_values, color='red', linewidth=2)
     

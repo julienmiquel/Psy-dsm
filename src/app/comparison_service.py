@@ -1,3 +1,8 @@
+"""
+This module provides functions for comparing different types of character profiles
+(e.g., CharacterProfile, CHCModel) and generating structured diffs.
+"""
+
 import difflib
 from typing import Dict, Any
 from app.models import CharacterProfile

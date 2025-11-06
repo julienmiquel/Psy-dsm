@@ -1,92 +1,108 @@
-import streamlit as st
+"""
+Main Streamlit application for the DSM-5 Character Profile Generator.
+
+This module handles the user interface, state management, and interaction
+with the backend services for character profile generation and analysis.
+"""
+
 import os
 import uuid
-from google import genai
+import streamlit as st
+from dotenv import load_dotenv
+
 from app.models import CharacterProfile
-from app.services import generate_character_profile, generate_tcc_program, analyze_profile_comparison, combine_character_profiles, generate_detailed_session
+from app.services import (
+    generate_character_profile,
+    generate_hexa3d_profile,
+    generate_tcc_program,
+    analyze_profile_comparison,
+    combine_character_profiles,
+    generate_detailed_session,
+)
 from app.psychometry_chc_generate import generate_chc_profile
-from app.chc_models import CHCModel
 from app.dashboard import display_profile, display_chc_profile, display_comparison
 from app.database import db_service as store_service
 from app.crm import crm_page
+from app.state import AppState
 
-
-from dotenv import load_dotenv
 load_dotenv()
 st.set_page_config(layout="wide")
+
+# Initialize the AppState in the session state if it doesn't exist
+if 'app_state' not in st.session_state:
+    st.session_state.app_state = AppState()
+app_state = st.session_state.app_state
 
 st.title("DSM-5 Character Profile Generator")
 
 DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
-DEBUG = True
 
-if DEBUG :
+if DEBUG:
     st.warning("Debug mode is ON. Make sure not to use real PII data.")
-    st.session_state['authenticated'] = True
-    st.session_state['user_id'] = "admin"
+    app_state.authenticated = True
+    app_state.user_id = "admin"
 
-if 'authenticated' not in st.session_state:
-    st.session_state['authenticated'] = False
-
-if not st.session_state['authenticated']:
+if not app_state.authenticated:
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
     if st.button("Login"):
-        if username == os.environ.get("ADMIN_USERNAME", "admin") and password == os.environ.get("ADMIN_PASSWORD", "h4gcv8PpV2@EKb@"):
-            st.session_state['authenticated'] = True
-            st.session_state['user_id'] = username
+        admin_user = os.environ.get("ADMIN_USERNAME", "admin")
+        admin_pass = os.environ.get("ADMIN_PASSWORD", "h4gcv8PpV2@EKb@")
+        if username == admin_user and password == admin_pass:
+            app_state.authenticated = True
+            app_state.user_id = username
             st.rerun()
         else:
             st.error("Invalid username or password")
 else:
-    if st.session_state.get('user_id'):
-        all_profiles = store_service.get_user_all_profiles(st.session_state['user_id'])
+    if app_state.user_id:
+        all_profiles = store_service.get_user_all_profiles(app_state.user_id)
     else:
         all_profiles = []
-    if 'character_selected' not in st.session_state:
-        st.session_state['character_selected'] = False
 
-    if not st.session_state['character_selected']:
+    if not app_state.character_selected:
         st.title("Welcome")
         
-        characters = store_service.get_user_characters(st.session_state['user_id'])
-        character_options = {char['character_name']: char['character_id'] for char in characters}
+        characters = store_service.get_user_characters(app_state.user_id)
+        character_options = {
+            char['character_name']: char['character_id'] for char in characters
+        }
 
         if character_options:
-            selected_character_name = st.selectbox("Select a character", list(character_options.keys()))
+            selected_character_name = st.selectbox(
+                "Select a character", list(character_options.keys())
+            )
 
             if st.button("Load Character"):
-                character_id = character_options[selected_character_name]
-                st.session_state['character_id'] = character_id
-                st.session_state['profile'] = store_service.get_character_profile(character_id)
-                st.session_state['chc_profile'] = store_service.get_chc_profile(character_id)
-                st.session_state['character_selected'] = True
+                app_state.character_id = character_options[selected_character_name]
+                app_state.profile = store_service.get_character_profile(
+                    app_state.character_id
+                )
+                app_state.chc_profile = store_service.get_chc_profile(
+                    app_state.character_id
+                )
+                app_state.character_selected = True
                 st.rerun()
 
         if st.button("Create New Character"):
-            # Reset session state for new character
-            if "profile" in st.session_state:
-                del st.session_state["profile"]
-            if "chc_profile" in st.session_state:
-                del st.session_state["chc_profile"]
-            if "tcc_program" in st.session_state:
-                del st.session_state["tcc_program"]
-            if "character_id" in st.session_state:
-                del st.session_state["character_id"]
-            st.session_state['character_selected'] = True
+            app_state.reset_character_data()
+            app_state.character_selected = True
             st.rerun()
 
-    elif 'combining' in st.session_state and st.session_state['combining']:
+    elif app_state.combining:
         st.header("Combine Profiles")
-        char_name = st.session_state['combine_character_name']
+        char_name = app_state.combine_character_name
         st.subheader(f"Character: {char_name}")
 
-        profiles_to_combine = [p for p in all_profiles if p['character_name'] == char_name and p['profile_type'] == "RIASEC"]
+        profiles_to_combine = [
+            p for p in all_profiles
+            if p['character_name'] == char_name and p['profile_type'] == "RIASEC"
+        ]
         
         selected_profiles_info = []
         for p in profiles_to_combine:
-            label = f"{p['profile_type']} - {p['profile_datetime']}"
-            if st.checkbox(label, key=f"combine-cb-{p['character_id']}"):
+            profile_label = f"{p['profile_type']} - {p['profile_datetime']}"
+            if st.checkbox(profile_label, key=f"combine-cb-{p['character_id']}"):
                 selected_profiles_info.append(p)
 
         if st.button("Merge Selected Profiles"):
@@ -94,96 +110,121 @@ else:
                 st.error("Please select at least two profiles to merge.")
             else:
                 with st.spinner("Merging profiles..."):
-                    selected_profiles = [store_service.get_character_profile(p['character_id']) for p in selected_profiles_info]
-                    merged_profile = combine_character_profiles(selected_profiles, st.session_state['user_id'])
-                    store_service.save_profile(merged_profile, st.session_state['user_id'])
-                    st.session_state['profile'] = merged_profile
-                    st.session_state['combining'] = False
+                    selected_profiles = [
+                        store_service.get_character_profile(p['character_id'])
+                        for p in selected_profiles_info
+                    ]
+                    merged_profile = combine_character_profiles(
+                        selected_profiles, app_state.user_id
+                    )
+                    store_service.save_profile(merged_profile, app_state.user_id)
+                    app_state.profile = merged_profile
+                    app_state.combining = False
                     st.rerun()
 
         if st.button("Back"):
-            del st.session_state['combining']
+            app_state.combining = False
             st.rerun()
 
     else:
         tabs = ["Generator", "User Profile"]
-        if 'comparison_ready' in st.session_state and st.session_state.get('comparison_ready', False):
+        if app_state.comparison_ready:
             tabs.append("Comparison")
 
         tab_objs = st.tabs(tabs)
-        tab1 = tab_objs[0]
-        tab2 = tab_objs[1]
+        tab1, tab2 = tab_objs[0], tab_objs[1]
         if len(tab_objs) > 2:
             comparison_tab = tab_objs[2]
             with comparison_tab:
-                display_comparison(st.session_state['compare_profile1'], st.session_state['compare_profile2'])
+                display_comparison(
+                    app_state.compare_profile1, app_state.compare_profile2
+                )
 
                 if st.button("Analyze Comparison with Gemini"):
                     with st.spinner("Analyzing comparison..."):
-                        profile1 = st.session_state['compare_profile1']
-                        profile2 = st.session_state['compare_profile2']
-                        if isinstance(profile1, CharacterProfile) and isinstance(profile2, CharacterProfile):
+                        profile1 = app_state.compare_profile1
+                        profile2 = app_state.compare_profile2
+                        if isinstance(profile1, CharacterProfile) and isinstance(
+                            profile2, CharacterProfile
+                        ):
                             analysis = analyze_profile_comparison(
-                                profile1,
-                                profile2,
-                                "gemini-2.5-pro"
+                                profile1, profile2, "gemini-2.5-pro"
                             )
-                            st.session_state['comparison_analysis'] = analysis
+                            app_state.comparison_analysis = analysis
                         else:
-                            st.error("Comparison analysis only supports two RIASEC profiles.")
+                            st.error(
+                                "Comparison analysis only supports two RIASEC profiles."
+                            )
 
-                if 'comparison_analysis' in st.session_state and 'comparison_ready' in st.session_state and st.session_state['comparison_ready']:
+                if app_state.comparison_analysis and app_state.comparison_ready:
                     st.subheader("Gemini Analysis")
-                    st.markdown(st.session_state['comparison_analysis'])
+                    st.markdown(app_state.comparison_analysis)
 
         with tab1:
-            description = st.text_area("Character Description", height=200, placeholder="Enter a detailed description of the character you want to analyze.")
-
+            description = st.text_area(
+                "Character Description",
+                height=200,
+                placeholder="Enter a detailed description...",
+            )
+            assessment_type = st.radio(
+                "Select Assessment Type", ("RIASEC", "Hexa3D")
+            )
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("Generate Profile", type="primary"):
                     if not description:
                         st.error("Please enter a character description.")
                     else:
-                        with st.spinner("Generating profile... This may take a moment."):
-                            profile = generate_character_profile(description, "gemini-2.5-pro", st.session_state['user_id'])
-                            st.session_state['profile'] = profile
-                            if 'chc_profile' in st.session_state:
-                                del st.session_state['chc_profile']
-                            if 'tcc_program' in st.session_state:
-                                del st.session_state["tcc_program"]
+                        with st.spinner("Generating profile..."):
+                            if assessment_type == "RIASEC":
+                                profile = generate_character_profile(
+                                    description, "gemini-2.5-pro", app_state.user_id
+                                )
+                            else:
+                                profile = generate_hexa3d_profile(
+                                    description, "gemini-2.5-pro", app_state.user_id
+                                )
+                            app_state.profile = profile
+                            app_state.chc_profile = None
+                            app_state.tcc_program = None
 
             with col2:
                 if st.button("Generate CHC Profile"):
                     if not description:
                         st.error("Please enter a character description.")
                     else:
-                        with st.spinner("Generating CHC profile... This may take a moment."):
-                            chc_profile = generate_chc_profile(description, "gemini-2.5-pro", st.session_state['user_id'])
+                        with st.spinner("Generating CHC profile..."):
+                            chc_profile = generate_chc_profile(
+                                description, "gemini-2.5-pro", app_state.user_id
+                            )
                             chc_profile.character_id = str(uuid.uuid4())
-                            store_service.save_chc_profile(chc_profile, st.session_state['user_id'])
-                            st.session_state['chc_profile'] = chc_profile
-                            if 'profile' in st.session_state:
-                                del st.session_state['profile']
-                            if 'tcc_program' in st.session_state:
-                                del st.session_state["tcc_program"]
+                            store_service.save_chc_profile(
+                                chc_profile, app_state.user_id
+                            )
+                            app_state.chc_profile = chc_profile
+                            app_state.profile = None
+                            app_state.tcc_program = None
 
-            if 'profile' in st.session_state and st.session_state['profile'] is not None:
-                display_profile(st.session_state['profile'])
-                if st.session_state['profile'].tcc_program:
-                    st.session_state['tcc_program'] = st.session_state['profile'].tcc_program
+            if app_state.profile is not None:
+                display_profile(app_state.profile)
+                if app_state.profile.tcc_program:
+                    app_state.tcc_program = app_state.profile.tcc_program
                 else:
-                    with st.spinner("Generating TCC program... This may take a moment."):
-                        tcc_program = generate_tcc_program(st.session_state['profile'], "gemini-2.5-pro")
-                        st.session_state['tcc_program'] = tcc_program
-                        store_service.update_profile_with_tcc_program(st.session_state['profile'].character_id, tcc_program)
+                    with st.spinner("Generating TCC program..."):
+                        tcc_program = generate_tcc_program(
+                            app_state.profile, "gemini-2.5-pro"
+                        )
+                        app_state.tcc_program = tcc_program
+                        store_service.update_profile_with_tcc_program(
+                            app_state.profile.character_id, tcc_program
+                        )
 
-            if 'chc_profile' in st.session_state and st.session_state['chc_profile'] is not None:
-                display_chc_profile(st.session_state['chc_profile'])
+            if app_state.chc_profile is not None:
+                display_chc_profile(app_state.chc_profile)
 
-            if 'tcc_program' in st.session_state and st.session_state['tcc_program'] is not None:
+            if app_state.tcc_program is not None:
                 st.header("Generated TCC Program")
-                tcc_program = st.session_state['tcc_program']
+                tcc_program = app_state.tcc_program
                 
                 st.subheader(tcc_program.title)
                 st.write(f"**Global Objective:** {tcc_program.global_objective}")
@@ -197,20 +238,24 @@ else:
                     for j, activity in enumerate(module.activities):
                         st.markdown(f"**- {activity.title}**")
                         
-                        if st.button(f"Generate Detailed Session for '{activity.title}'", key=f"gen-session-{i}-{j}"):
-                            with st.spinner(f"Generating session for '{activity.title}'..."):
-                                profile = st.session_state.get('profile')
+                        key = f"gen-session-{i}-{j}"
+                        if st.button(f"Detailed Session for '{activity.title}'", key=key):
+                            with st.spinner(f"Generating session..."):
+                                profile = app_state.profile
                                 if profile:
-                                    session_details = generate_detailed_session(profile, module, activity)
-                                    if 'detailed_sessions' not in st.session_state:
-                                        st.session_state['detailed_sessions'] = {}
-                                    st.session_state['detailed_sessions'][f"{i}-{j}"] = session_details
+                                    session_details = generate_detailed_session(
+                                        profile, module, activity
+                                    )
+                                    app_state.detailed_sessions[f"{i}-{j}"] = session_details
                                 else:
-                                    st.error("A full character profile is needed to generate session details.")
+                                    st.error("A character profile is needed.")
 
-                        if 'detailed_sessions' in st.session_state and f"{i}-{j}" in st.session_state['detailed_sessions']:
+                        if f"{i}-{j}" in app_state.detailed_sessions:
                             with st.expander("View Detailed Session Plan"):
-                                st.markdown(st.session_state['detailed_sessions'][f"{i}-{j}"], unsafe_allow_html=True)
+                                st.markdown(
+                                    app_state.detailed_sessions[f"{i}-{j}"],
+                                    unsafe_allow_html=True,
+                                )
 
                         for detail in activity.details:
                             st.markdown(f"  - {detail}")
@@ -222,25 +267,19 @@ else:
             crm_page()
 
 
-if 'user_id' in st.session_state:
+if app_state.user_id:
     if st.sidebar.button("Back to Character Selection"):
-        st.session_state['character_selected'] = False
-        if 'comparing' in st.session_state:
-            del st.session_state['comparing']
-        if 'comparison_ready' in st.session_state:
-            del st.session_state['comparison_ready']
+        app_state.back_to_character_selection()
         st.rerun()
 
     st.sidebar.title("History")
     
-    # Group profiles by character name
     characters_history = {}
     for p in all_profiles:
         char_name = p['character_name']
         if char_name not in characters_history:
             characters_history[char_name] = {
-                "name": p['character_name'],
-                "profiles": []
+                "name": p['character_name'], "profiles": []
             }
         characters_history[char_name]['profiles'].append(p)
 
@@ -250,46 +289,34 @@ if 'user_id' in st.session_state:
         col1, col2 = st.sidebar.columns([3,1])
         with col1:
             for profile_entry in char_data['profiles']:
-                display_text = f"({profile_entry['profile_type']}) - {profile_entry['profile_datetime']}"
-                if st.button(display_text, key=f"view-{profile_entry['character_id']}"):
-                    st.session_state['character_id'] = profile_entry['character_id']
-
-                    # Clear existing profiles
-                    if 'profile' in st.session_state: del st.session_state['profile']
-                    if 'chc_profile' in st.session_state: del st.session_state['chc_profile']
-                    if 'tcc_program' in st.session_state: del st.session_state['tcc_program']
+                text = f"({profile_entry['profile_type']}) - {profile_entry['profile_datetime']}"
+                if st.button(text, key=f"view-{profile_entry['character_id']}"):
+                    app_state.character_id = profile_entry['character_id']
+                    app_state.reset_character_data()
 
                     if profile_entry['profile_type'] == "RIASEC":
-                        st.session_state['profile'] = store_service.get_character_profile(profile_entry['character_id'])
+                        app_state.profile = store_service.get_character_profile(
+                            profile_entry['character_id']
+                        )
                     elif profile_entry['profile_type'] == "CHC":
-                        st.session_state['chc_profile'] = store_service.get_chc_profile(profile_entry['character_id'])
+                        app_state.chc_profile = store_service.get_chc_profile(
+                            profile_entry['character_id']
+                        )
 
-                    if 'profile' in st.session_state and st.session_state['profile'] is not None:
-                        if st.session_state['profile'].tcc_program:
-                            st.session_state['tcc_program'] = st.session_state['profile'].tcc_program
+                    if app_state.profile and app_state.profile.tcc_program:
+                        app_state.tcc_program = app_state.profile.tcc_program
 
                     st.rerun()
         with col2:
             if st.button("Compare", key=f"compare-{char_name}"):
-                st.session_state['comparing'] = True
-                st.session_state['compare_character_name'] = char_name
+                app_state.comparing = True
+                app_state.compare_character_name = char_name
                 st.rerun()
             if st.button("Combine", key=f"combine-{char_name}"):
-                st.session_state['combining'] = True
-                st.session_state['combine_character_name'] = char_name
+                app_state.combining = True
+                app_state.combine_character_name = char_name
                 st.rerun()
 
     if st.sidebar.button("Clear Selection"):
-        if "profile" in st.session_state:
-            del st.session_state["profile"]
-        if "chc_profile" in st.session_state:
-            del st.session_state["chc_profile"]
-        if "tcc_program" in st.session_state:
-            del st.session_state["tcc_program"]
-        if "character_id" in st.session_state:
-            del st.session_state["character_id"]
-        if 'comparing' in st.session_state:
-            del st.session_state['comparing']
-        if 'comparison_ready' in st.session_state:
-            del st.session_state['comparison_ready']
+        app_state.back_to_character_selection()
         st.rerun()
