@@ -155,6 +155,30 @@ def get_user_profile(user_id: str):
     client = get_datastore_client()
     profile_key = client.key("UserProfile", user_id)
     entity = client.get(profile_key)
-    if entity:
-        return UserProfile(**entity)
     return None
+
+def save_detailed_session(character_id: str, module_index: int, activity_index: int, session_content: str):
+    """Saves a detailed TCC session to Datastore."""
+    client = get_datastore_client()
+    session_id = f"{character_id}_{module_index}_{activity_index}"
+    session_key = client.key("TCCSession", session_id)
+    session_entity = datastore.Entity(key=session_key)
+    session_entity.update({
+        "character_id": character_id,
+        "module_index": module_index,
+        "activity_index": activity_index,
+        "content": session_content,
+    })
+    client.put(session_entity)
+
+
+def get_detailed_session(character_id: str, module_index: int, activity_index: int) -> str | None:
+    """Retrieves a detailed TCC session from Datastore."""
+    client = get_datastore_client()
+    session_id = f"{character_id}_{module_index}_{activity_index}"
+    session_key = client.key("TCCSession", session_id)
+    session_entity = client.get(session_key)
+    if session_entity:
+        return session_entity.get("content")
+    return None
+

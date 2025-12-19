@@ -54,6 +54,28 @@ This centralized index provides a single source of truth for all data related to
 
 For cloud-based storage (Datastore/Firestore), a similar approach is used with a "CharacterIndex" kind/collection.
 
+## Storage
+
+The application supports multiple storage backends for persisting character profiles and other data. The storage mode can be configured via the `DATABASE_SERVICE` environment variable.
+
+### Local File System (`local`)
+
+This is the default storage mode, ideal for local development and testing.
+- **Service:** `src/app/local_file_service.py`
+- **Description:** Data is stored in JSON and Markdown files in the `local_db/` directory. New features are primarily integrated and tested with this service first.
+
+### Google Cloud Firestore (`firestore`)
+
+A scalable and reliable NoSQL document database.
+- **Service:** `src/app/firestore_service.py`
+- **Description:** Once features are validated locally, they are implemented for Firestore, with adaptations for its document-based structure and constraints (e.g., document size limits).
+
+### Google Cloud Datastore (`datastore`)
+
+A highly scalable NoSQL database for web and mobile applications.
+- **Service:** `src/app/datastore_service.py`
+- **Description:** Similar to Firestore, this implementation is for cloud deployment and requires adapting features to Datastore's entity-based model and constraints.
+
 ## How to Run
 
 1.  **Install the dependencies:**

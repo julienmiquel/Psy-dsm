@@ -17,6 +17,7 @@ PROFILES_PATH = LOCAL_DB_PATH / "profiles"
 CHC_PROFILES_PATH = LOCAL_DB_PATH / "chc"
 USERS_PATH = LOCAL_DB_PATH / "users"
 TCC_PROGRAMS_PATH = LOCAL_DB_PATH / "tcc_programs"
+TCC_SESSIONS_PATH = LOCAL_DB_PATH / "tcc_sessions"
 
 def _init_db():
     """Creates the necessary directories for the local file store."""
@@ -24,6 +25,7 @@ def _init_db():
     USERS_PATH.mkdir(parents=True, exist_ok=True)
     TCC_PROGRAMS_PATH.mkdir(parents=True, exist_ok=True)
     CHC_PROFILES_PATH.mkdir(parents=True, exist_ok=True)
+    TCC_SESSIONS_PATH.mkdir(parents=True, exist_ok=True)
 
 def save_profile(profile: CharacterProfile, user_id: str):
     """Saves a character profile to the local file system."""
@@ -152,6 +154,22 @@ def get_user_profile(user_id: str):
     with open(profile_path, "r", encoding="utf-8") as f:
         profile_data = json.load(f)
     return UserProfile(**profile_data)
+
+def save_detailed_session(character_id: str, module_index: int, activity_index: int, session_content: str):
+    """Saves a detailed TCC session to the local file system."""
+    _init_db()
+    session_path = TCC_SESSIONS_PATH / f"{character_id}_{module_index}_{activity_index}.md"
+    with open(session_path, "w") as f:
+        f.write(session_content)
+
+def get_detailed_session(character_id: str, module_index: int, activity_index: int) -> str | None:
+    """Retrieves a detailed TCC session from the local file system."""
+    _init_db()
+    session_path = TCC_SESSIONS_PATH / f"{character_id}_{module_index}_{activity_index}.md"
+    if session_path.exists():
+        with open(session_path, "r") as f:
+            return f.read()
+    return None
 
 def get_user_all_profiles(user_id: str) -> list:
     """Retrieves all profiles for a given user from the local file system."""

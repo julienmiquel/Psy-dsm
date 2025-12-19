@@ -36,6 +36,7 @@ app_state = st.session_state.app_state
 st.title("DSM-5 Character Profile Generator")
 
 DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
+DEBUG = True
 
 if DEBUG:
     st.warning("Debug mode is ON. Make sure not to use real PII data.")
@@ -237,25 +238,30 @@ else:
                     st.markdown("#### Activities:")
                     for j, activity in enumerate(module.activities):
                         st.markdown(f"**- {activity.title}**")
+
+                        character_id = app_state.profile.character_id
+                        session_key = f"{character_id}_{i}_{j}"
+
+                        # Try to load a saved session first
+                        if session_key not in app_state.detailed_sessions:
+                            saved_session = store_service.get_detailed_session(character_id, i, j)
+                            if saved_session:
+                                app_state.detailed_sessions[session_key] = saved_session
                         
-                        key = f"gen-session-{i}-{j}"
-                        if st.button(f"Detailed Session for '{activity.title}'", key=key):
-                            with st.spinner(f"Generating session..."):
+                        button_text = "Regenerate Detailed Session" if session_key in app_state.detailed_sessions else "Generate Detailed Session"
+                        if st.button(f"{button_text} for '{activity.title}'", key=f"gen-session-{i}-{j}"):
+                            with st.spinner(f"Generating session for '{activity.title}'..."):
                                 profile = app_state.profile
                                 if profile:
-                                    session_details = generate_detailed_session(
-                                        profile, module, activity
-                                    )
-                                    app_state.detailed_sessions[f"{i}-{j}"] = session_details
+                                    session_details = generate_detailed_session(profile, module, activity)
+                                    app_state.detailed_sessions[session_key] = session_details
+                                    store_service.save_detailed_session(character_id, i, j, session_details)
                                 else:
                                     st.error("A character profile is needed.")
 
-                        if f"{i}-{j}" in app_state.detailed_sessions:
+                        if session_key in app_state.detailed_sessions:
                             with st.expander("View Detailed Session Plan"):
-                                st.markdown(
-                                    app_state.detailed_sessions[f"{i}-{j}"],
-                                    unsafe_allow_html=True,
-                                )
+                                st.markdown(app_state.detailed_sessions[session_key], unsafe_allow_html=True)
 
                         for detail in activity.details:
                             st.markdown(f"  - {detail}")

@@ -6,7 +6,7 @@ in the Streamlit UI.
 import streamlit as st
 from app.chc_models import CHCModel
 from app.models import CharacterProfile
-from app.visualizations import get_riasec_figures
+from app.visualizations import get_riasec_figures, get_hexa3d_figures
 from app.comparison_service import compare_character_profiles, compare_chc_profiles
 
 
@@ -159,12 +159,10 @@ def display_profile(profile: CharacterProfile):
                     st.markdown(f"- {criterion}")
                 if diagnosis.specifiers:
                     st.write("**Specifiers:**")
-                    for spec in diagnosis.specifiers:
-                        st.markdown(f"- {spec.specifier_type}: {spec.value}")
+                    for specifier in diagnosis.specifiers:
+                        st.markdown(f"- {specifier.specifier_type}: {specifier.value}")
                 if diagnosis.functional_impairment:
-                    st.write(
-                        f"**Functional Impairment:** {diagnosis.functional_impairment}"
-                    )
+                    st.write(f"**Functional Impairment:** {diagnosis.functional_impairment}")
                 if diagnosis.diagnostic_note:
                     st.write(f"**Diagnostic Note:** {diagnosis.diagnostic_note}")
 
@@ -177,10 +175,8 @@ def display_profile(profile: CharacterProfile):
         for score in assessment.riasec_scores:
             st.write(f"**{score.theme}:** {score.score} - {score.description}")
 
-        bar_chart, radar_chart = get_riasec_figures(
-            profile.holland_code_assessment
-        )
-        col1, col2 = st.columns(2)
+        bar_chart, radar_chart = get_riasec_figures(profile.holland_code_assessment)
+        col1 , col2 = st.columns(2)
         with col1:
             st.header("RIASEC Scores Bar Chart")
             st.pyplot(bar_chart)
@@ -190,7 +186,26 @@ def display_profile(profile: CharacterProfile):
         st.markdown("---")
 
     if profile.hexa3d_assessment:
-        display_hexa3d_assessment(profile.hexa3d_assessment)
+        st.subheader("Hexa3D Assessment")
+        assessment = profile.hexa3d_assessment
+        if hasattr(assessment, 'code_global_top_themes'):
+            st.write(f"**Top Themes:** {', '.join(assessment.code_global_top_themes)}")
+        st.write(f"**Summary:** {assessment.summary}")
+
+        scores = getattr(assessment, 'details', getattr(assessment, 'hexa3d_scores', []))
+        for score in scores:
+            st.write(f"**{score.theme}:** {score.score} - {score.description}")
+
+        bar_chart, radar_chart = get_hexa3d_figures(profile.hexa3d_assessment)
+        if bar_chart and radar_chart:
+            col1 , col2 = st.columns(2)
+            with col1:
+                st.header("Hexa3D Scores Bar Chart")
+                st.pyplot(bar_chart)
+            with col2:
+                st.header("Hexa3D Profile Radar Chart")
+                st.pyplot(radar_chart)
+        st.markdown("---")
 
     with st.expander("Full Profile JSON"):
         st.json(profile.model_dump())

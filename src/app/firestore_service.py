@@ -141,3 +141,26 @@ def get_user_profile(user_id: str):
     if doc.exists:
         return UserProfile(**doc.to_dict())
     return None
+
+def save_detailed_session(character_id: str, module_index: int, activity_index: int, session_content: str):
+    """Saves a detailed TCC session to Firestore."""
+    client = get_firestore_client()
+    session_id = f"{character_id}_{module_index}_{activity_index}"
+    session_ref = client.collection("TCCSession").document(session_id)
+    session_ref.set({
+        "character_id": character_id,
+        "module_index": module_index,
+        "activity_index": activity_index,
+        "content": session_content,
+    })
+
+
+def get_detailed_session(character_id: str, module_index: int, activity_index: int) -> str | None:
+    """Retrieves a detailed TCC session from Firestore."""
+    client = get_firestore_client()
+    session_id = f"{character_id}_{module_index}_{activity_index}"
+    session_ref = client.collection("TCCSession").document(session_id)
+    session_doc = session_ref.get()
+    if session_doc.exists:
+        return session_doc.to_dict().get("content")
+    return None
