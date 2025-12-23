@@ -25,6 +25,11 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 pythonpath = "src"
+markers = [
+    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+    "quality: marks tests as quality tests (deselect with '-m \"not quality\"')",
+    "stability: marks tests as stability tests (deselect with '-m \"not stability\"')",
+]
 
 [dependency-groups]
 dev = [
