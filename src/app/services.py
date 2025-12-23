@@ -1,11 +1,13 @@
-from datetime import date
-import json
-from datetime import date
-import os
-from .models import CharacterProfile, TCCProgram, EvaluationResult
+"""
+This module provides services for generating and analyzing character profiles
+using Google's Generative AI.
+"""
 
+import os
+from datetime import date
 from google import genai
 from google.genai import types
+from app.models import CharacterProfile, TCCProgram, EvaluationResult
 
 
 SYSTEM_PROMPT = f"""
@@ -62,10 +64,10 @@ Subject is a 52-year-old male architect. He reports chronic feelings of emptines
     ]
 }}
 ```
-"""
+""" # pylint: disable=line-too-long
 
-SYSTEM_PROMPT_TCC = f"""
-You are a clinical psychologist and career counselor. 
+SYSTEM_PROMPT_TCC = """
+You are a clinical psychologist and career counselor.
 Your task is to analyze the clinical profile and create a TCC program adapted to manage disorder in JSON format.
 
 
@@ -73,7 +75,7 @@ Your task is to analyze the clinical profile and create a TCC program adapted to
 *   Your output **must** be a single, valid JSON object, without any markdown formatting or extra text.
 """
 
-SYSTEM_PROMPT_JUDGE = f"""
+SYSTEM_PROMPT_JUDGE = """
 You are an expert clinical psychologist. Your task is to evaluate the quality of a generated clinical profile against a golden standard.
 
 **EVALUATION CRITERIA:**
@@ -93,16 +95,17 @@ Your output **must** be a single, valid JSON object matching the `EvaluationResu
 """
 
 def get_genai_client() -> genai.Client:
-        client = genai.Client(                                                                                                                                                            
-            vertexai=True,                                                                                                                                                    
-            project=os.getenv("GOOGLE_CLOUD_PROJECT"),                                                                                                                                                    
-            location=os.getenv("GOOGLE_CLOUD_LOCATION"),                                                                                                                                                     
-        ) 
-        return client
+    """Initializes and returns the GenAI client."""
+    client = genai.Client(
+        vertexai=True,
+        project=os.getenv("GOOGLE_CLOUD_PROJECT"),
+        location=os.getenv("GOOGLE_CLOUD_LOCATION"),
+    )
+    return client
 
 def generate_tcc_program(
     profile: CharacterProfile, model_id: str) -> TCCProgram:
-    
+    """Generates a TCC program based on the character profile."""
     generation_config = types.GenerateContentConfig(
         response_schema=TCCProgram,
         response_mime_type="application/json",
