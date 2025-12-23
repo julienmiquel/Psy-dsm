@@ -15,6 +15,9 @@ pytest = "^8.4.2"
 python-dotenv = "^1.2.1"
 matplotlib = "^3.10.7"
 google-cloud-aiplatform = {extras = ["evaluation"], version = "^1.124.0"}
+pandas = "^2.3.3"
+numpy = "^2.4.0"
+google-adk = "^1.21.0"
 
 [build-system]
 requires = ["poetry-core"]

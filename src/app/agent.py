@@ -1,7 +1,6 @@
 """
 This module defines the LLM agent for interactive character profiling.
 """
-# pylint: disable=import-error, no-name-in-module
 from google.adk.agents import LlmAgent
 from app.models import CharacterProfile
 
