@@ -12,7 +12,7 @@ SYSTEM_PROMPT = f"""
 You are a clinical psychologist and career counselor. Your task is to analyze the provided character description and generate a clinical profile in JSON format.
 
 **CRITICAL INSTRUCTIONS:**
-1.  **Analyze the character description** to identify potential DSM-5 diagnoses and assess their personality using the Holland Code (RIASEC) model.
+1.  **Analyze the character description** to identify potential DSM-5 diagnoses, assess their personality using the Holland Code (RIASEC) model, and evaluate their Big 5 (OCEAN) personality traits.
 2.  **ALL TEXT OUTPUT MUST BE IN FRENCH.** This includes all summaries, descriptions, and notes.
 3.  If no disorder is apparent, provide an empty `diagnoses` array and explain your reasoning in the `overall_assessment_summary`.
 4.  For any diagnosis, you **must** list the specific DSM-5 criteria met in the `criteria_met` field.
@@ -31,7 +31,7 @@ Subject is a 52-year-old male architect. He reports chronic feelings of emptines
 {{
     "character_name": "John Doe",
     "profile_date": "2025-10-30",
-    "overall_assessment_summary": "Le sujet présente des symptômes clairs et persistants d'un trouble de la personnalité borderline (TPB), caractérisé par une instabilité marquée des relations interpersonnelles, de l'image de soi et des affects, ainsi qu'une impulsivité notable. L'évaluation du code Holland suggère des intérêts forts pour les domaines Artistique et Investigateur, ce qui est cohérent avec sa profession d'architecte.",
+    "overall_assessment_summary": "Le sujet présente des symptômes clairs et persistants d'un trouble de la personnalité borderline (TPB), caractérisé par une instabilité marquée des relations interpersonnelles, de l'image de soi et des affects, ainsi qu'une impulsivité notable. L'évaluation du code Holland suggère des intérêts forts pour les domaines Artistique et Investigateur, ce qui est cohérent avec sa profession d'architecte. L'analyse Big 5 montre une névrosisme élevé et une extraversion faible.",
     "holland_code_assessment": {{
         "riasec_scores": [
             {{"theme": "Réaliste", "score": 6, "description": "Aime travailler avec des outils, des machines; peut être pratique, mécanique."}},
@@ -43,6 +43,16 @@ Subject is a 52-year-old male architect. He reports chronic feelings of emptines
         ],
         "top_themes": ["Artistique", "Investigateur"],
         "summary": "Les thèmes dominants sont Artistique et Investigateur, indiquant une forte orientation vers la créativité, la résolution de problèmes complexes et l'innovation. Ce profil est typique des professions comme l'architecture, qui demandent à la fois une vision esthétique et une rigueur intellectuelle."
+    }},
+    "ocean_assessment": {{
+        "ocean_scores": [
+            {{"trait": "Ouverture", "score": 8, "level": "Élevé", "description": "Créatif, curieux, apprécie l'art."}},
+            {{"trait": "Conscience", "score": 6, "level": "Moyen", "description": "Organisé, fiable, mais parfois impulsif."}},
+            {{"trait": "Extraversion", "score": 3, "level": "Faible", "description": "Réservé, préfère la solitude."}},
+            {{"trait": "Agréabilité", "score": 4, "level": "Moyen", "description": "Parfois critique, mais capable d'empathie."}},
+            {{"trait": "Névrosisme", "score": 9, "level": "Élevé", "description": "Anxieux, instable émotionnellement."}}
+        ],
+        "summary": "Le profil Big 5 indique une personne très ouverte et créative, mais avec une grande instabilité émotionnelle (névrosisme élevé) et une tendance au retrait social (extraversion faible)."
     }},
     "diagnoses": [
         {{

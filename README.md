@@ -3,6 +3,15 @@ A tool to help to map psychological pathologies based on DSM-5 reference book.
 
 This application uses the Google Gemini API to generate a clinical profile of a fictional character based on a user-provided description. The profile is based on the DSM-5 criteria and is intended for creative and academic purposes.
 
+For a detailed overview of the project, please read the [Article](ARTICLE.md).
+
+## Features
+
+*   **Standard Profile Generation:** Generates a clinical profile from a text description, including DSM-5 diagnoses and Holland Code (RIASEC) assessment.
+*   **Big 5 (OCEAN) Analysis:** specific assessment of the 5 main personality traits.
+*   **Chat Mode:** Allows for interactive character diagnosis.
+*   **Evaluation:** Includes tools for evaluating the quality of generated profiles using an LLM-as-a-judge approach.
+
 ## Project Structure
 
 - `src/app`: Contains the main application code.
