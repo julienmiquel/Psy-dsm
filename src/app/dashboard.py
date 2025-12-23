@@ -1,3 +1,6 @@
+"""
+Streamlit dashboard components for displaying character profiles.
+"""
 import streamlit as st
 from app.models import CharacterProfile
 from app.visualizations import get_riasec_figures
@@ -23,21 +26,20 @@ def display_profile(profile: CharacterProfile):
         st.write(f"**Top Themes:** {', '.join(holland_assessment.get('top_themes', []))}")
         st.write(f"**Summary:** {holland_assessment.get('summary', 'No summary provided.')}")
         for score in holland_assessment.get('riasec_scores', []):
-            st.markdown(f"- **{score.get('theme')}:** {score.get('score')}/10 - {score.get('description')}")
+            st.markdown(
+                f"- **{score.get('theme')}:** {score.get('score')}/10 - "
+                f"{score.get('description')}"
+            )
 
         bar_chart, radar_chart = get_riasec_figures(profile.holland_code_assessment)
-        col1 , col2 = st.columns(2)
+        col1, col2 = st.columns(2)
         with col1:
             st.header("RIASEC Scores Bar Chart")
             st.pyplot(bar_chart)
         with col2:
             st.header("RIASEC Profile Radar Chart")
             st.pyplot(radar_chart)
-        # st.header("RIASEC Scores Bar Chart")
-        # st.pyplot(bar_chart)
 
-        # st.header("RIASEC Profile Radar Chart")
-        # st.pyplot(radar_chart)
         st.markdown("---")
         with st.expander("Full holland assessment JSON"):
             st.json(holland_assessment)
@@ -47,29 +49,31 @@ def display_profile(profile: CharacterProfile):
         st.info("No formal diagnoses were assigned.")
     else:
         st.subheader("Diagnostic Impressions")
-        for dx in diagnoses:
-            with st.expander(f"{dx.get('disorder_name', 'N/A')} ({dx.get('dsm_code', 'N/A')})"):
-                st.write(f"**Category:** {dx.get('dsm_category', 'N/A')}")
+        for diagnos in diagnoses:
+            with st.expander(
+                f"{diagnos.get('disorder_name', 'N/A')} ({diagnos.get('dsm_code', 'N/A')})"
+            ):
+                st.write(f"**Category:** {diagnos.get('dsm_category', 'N/A')}")
 
-                specifiers = dx.get('specifiers', [])
+                specifiers = diagnos.get('specifiers', [])
                 if specifiers:
                     st.write("**Specifiers:**")
-                    for s in specifiers:
-                        st.markdown(f"- {s.get('specifier_type')}: {s.get('value')}")
+                    for spec in specifiers:
+                        st.markdown(f"- {spec.get('specifier_type')}: {spec.get('value')}")
 
                 st.write("**Criteria Met (Justification):**")
-                criteria = dx.get('criteria_met', [])
+                criteria = diagnos.get('criteria_met', [])
                 if criteria:
-                    for c in criteria:
-                        st.markdown(f"- {c}")
+                    for criterion in criteria:
+                        st.markdown(f"- {criterion}")
                 else:
                     st.markdown("- None listed.")
 
                 st.write("**Functional Impairment:**")
-                impairment = dx.get('functional_impairment', 'Not specified.')
+                impairment = diagnos.get('functional_impairment', 'Not specified.')
                 st.write(impairment)
 
-                note = dx.get('diagnostic_note')
+                note = diagnos.get('diagnostic_note')
                 if note:
                     st.write("**Notes:**")
                     st.write(note)
