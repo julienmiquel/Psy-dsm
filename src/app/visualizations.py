@@ -55,7 +55,7 @@ def create_riasec_visualizations(assessment: HollandCodeAssessment, output_dir: 
     plt.savefig(radar_chart_path)
     plt.close()
 
-    print(f"Charts saved to {os.path.abspath(output_dir)}")
+    # print(f"Charts saved to {os.path.abspath(output_dir)}")
 
 
 def get_riasec_figures(assessment: HollandCodeAssessment):
