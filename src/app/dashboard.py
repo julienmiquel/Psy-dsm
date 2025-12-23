@@ -11,9 +11,6 @@ def display_holland_assessment(profile: CharacterProfile):
     if not holland_assessment:
         return
 
-    # Convert to dict for easy access if needed, or use object attributes directly
-    # Using object attributes as per model definition
-
     st.subheader("Holland Code (RIASEC) Assessment")
     st.write(f"**Top Themes:** {', '.join(holland_assessment.top_themes)}")
     st.write(f"**Summary:** {holland_assessment.summary}")
@@ -62,20 +59,19 @@ def display_diagnoses(profile: CharacterProfile):
     else:
         st.subheader("Diagnostic Impressions")
         for dx in diagnoses:
-            # Check if dsm_code is present
             title = f"{dx.disorder_name} ({dx.dsm_code})" if dx.dsm_code else dx.disorder_name
             with st.expander(title):
                 st.write(f"**Category:** {dx.dsm_category}")
 
                 if dx.specifiers:
                     st.write("**Specifiers:**")
-                    for s in dx.specifiers:
-                        st.markdown(f"- {s.specifier_type}: {s.value}")
+                    for specifier in dx.specifiers:
+                        st.markdown(f"- {specifier.specifier_type}: {specifier.value}")
 
                 st.write("**Criteria Met (Justification):**")
                 if dx.criteria_met:
-                    for c in dx.criteria_met:
-                        st.markdown(f"- {c}")
+                    for criteria in dx.criteria_met:
+                        st.markdown(f"- {criteria}")
                 else:
                     st.markdown("- None listed.")
 

@@ -31,7 +31,7 @@ if 'profile' in st.session_state:
             st.session_state['profile'], "gemini-2.5-pro"
         )
 
-if 'tcc_program' in st.session_state:
+if 'tcc_program' in st.session_state and st.session_state['tcc_program']:
     st.header("Generated TCC Program")
     tcc_program = st.session_state['tcc_program']
 
