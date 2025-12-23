@@ -1,69 +1,38 @@
-"""
-This module defines the Pydantic models used throughout the application
-to represent characters, psychological profiles, and TCC programs.
-"""
-
+"""Data models for the application."""
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
+# pylint: disable=line-too-long, missing-class-docstring
+
 class DiagnosisSpecifier(BaseModel):
-    """Specifier for a diagnosis (e.g., 'Severity', 'Moderate')."""
     specifier_type: str
     value: str
 
 class DiagnosisEntry(BaseModel):
-    """Detailed entry for a single diagnosis."""
     disorder_name: str
     dsm_category: str
-    criteria_met: List[str] = Field(
-        default_factory=list,
-        description="Specific DSM-5 criteria codes/text met"
-    )
+    criteria_met: List[str] = Field(default_factory=list, description="Specific DSM-5 criteria codes/text met")
     specifiers: List[DiagnosisSpecifier] = Field(default_factory=list)
-    dsm_code: Optional[str] = Field(
-        None,
-        description="The official DSM-5 code, e.g., '301.7'"
-    )
-    functional_impairment: Optional[str] = Field(
-        None,
-        description="How the disorder impairs the character's life"
-    )
-    diagnostic_note: Optional[str] = Field(
-        None,
-        description="Clinical notes or differential diagnosis"
-    )
+    dsm_code: Optional[str] = Field(None, description="The official DSM-5 code, e.g., '301.7'")
+    functional_impairment: Optional[str] = Field(None, description="How the disorder impairs the character's life")
+    diagnostic_note: Optional[str] = Field(None, description="Clinical notes or differential diagnosis")
 
 class HollandCode(BaseModel):
-    """Represents a single Holland Code theme and score."""
     theme: str = Field(description="The dominant Holland Code theme (e.g., 'Social').")
     score: int = Field(description="Score for the theme (typically 1-10).")
     description: str = Field(description="Brief description of the theme.")
 
 class HollandCodeAssessment(BaseModel):
     """Represents a Holland Code (RIASEC) assessment."""
-    riasec_scores: List[HollandCode] = Field(
-        default_factory=list,
-        description="List of RIASEC scores."
-    )
-    top_themes: List[str] = Field(
-        description="The top 2-3 RIASEC themes that best fit the character."
-    )
+    riasec_scores: List[HollandCode] = Field(default_factory=list, description="List of RIASEC scores.")
+    top_themes: List[str] = Field(description="The top 2-3 RIASEC themes that best fit the character.")
     summary: str = Field(description="A summary of the Holland Code assessment.")
 
 class CharacterProfile(BaseModel):
-    """Represents the complete psychological profile of a character."""
     character_name: str
-    profile_date: str = Field(
-        description="Date of profile generation in YYYY-MM-DD format"
-    )
-    overall_assessment_summary: Optional[str] = Field(
-        None,
-        description="A brief summary of the clinical assessment"
-    )
-    holland_code_assessment: Optional[HollandCodeAssessment] = Field(
-        None,
-        description="Holland Code (RIASEC) assessment results."
-    )
+    profile_date: str = Field(description="Date of profile generation in YYYY-MM-DD format")
+    overall_assessment_summary: Optional[str] = Field(None, description="A brief summary of the clinical assessment")
+    holland_code_assessment: Optional[HollandCodeAssessment] = Field(None, description="Holland Code (RIASEC) assessment results.")
     character_id: Optional[str] = None
     diagnoses: List[DiagnosisEntry] = Field(default_factory=list)
 
@@ -86,6 +55,15 @@ class TCCProgram(BaseModel):
     modules: List[Module] = Field(default_factory=list)
 
 class EvaluationResult(BaseModel):
-    """Result of an evaluation process."""
     score: int = Field(description="The quality score from 1 (poor) to 5 (excellent).")
     rationale: str = Field(description="The rationale for the given score.")
+
+
+class PodcastSegment(BaseModel):
+    speaker: str = Field(description="The name of the speaker (e.g., Host, Guest, Psychologist).")
+    text: str = Field(description="The dialogue spoken by the speaker.")
+
+class PodcastScript(BaseModel):
+    title: str = Field(description="Podcast title.")
+    target_audience: str = Field(description="Target audience.")
+    segments: List[PodcastSegment] = Field(default_factory=list, description="Dialogue segments.")

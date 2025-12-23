@@ -1,8 +1,6 @@
 """
-Visualizations module for generating charts and graphs for character assessments.
-Includes functions to create RIASEC (Holland Code) visualizations.
+This module provides visualization functions for RIASEC assessments.
 """
-
 import os
 import matplotlib.pyplot as plt
 import numpy as np
@@ -43,7 +41,8 @@ def create_riasec_visualizations(assessment: HollandCodeAssessment, output_dir: 
     values += values[:1]
     angles += angles[:1]
 
-    _, ax = plt.subplots(figsize=(8, 8), subplot_kw={'polar': True})
+    # pylint: disable=unused-variable
+    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw={'polar': True})
     ax.fill(angles, values, color='red', alpha=0.25)
     ax.plot(angles, values, color='red', linewidth=2)
 

@@ -1,9 +1,6 @@
 """
-Batch processing script for character profiles.
-This script reads character descriptions from an input file, generates profiles
-using the configured generative model, and writes the results to an output file.
+This module provides functionality for batch processing of character descriptions.
 """
-
 import argparse
 from dotenv import load_dotenv
 
@@ -23,7 +20,6 @@ def batch_process(input_file: str, output_file: str, model_id: str):
         try:
             profile = generate_character_profile(description, model_id)
             f_out.write(profile.model_dump_json(indent=2))
-            # f_out.write('\n---\n')
         except Exception as e: # pylint: disable=broad-exception-caught
             print(f"Error processing description: {description[:50]}... Error: {e}")
 

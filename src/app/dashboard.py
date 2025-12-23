@@ -1,29 +1,25 @@
 """
-This module contains the dashboard rendering logic for displaying
-character profiles and assessments in the Streamlit application.
+This module provides the dashboard UI for displaying character profiles.
 """
-
 import streamlit as st
 from app.models import CharacterProfile
 from app.visualizations import get_riasec_figures
 
 def display_holland_assessment(profile: CharacterProfile):
     """Renders the Holland Code Assessment section."""
-    profile_dict = profile.model_dump()
-    holland_assessment = profile_dict.get('holland_code_assessment')
-
+    holland_assessment = profile.holland_code_assessment
     if not holland_assessment:
         return
 
     st.subheader("Holland Code (RIASEC) Assessment")
-    st.write(f"**Top Themes:** {', '.join(holland_assessment.get('top_themes', []))}")
-    st.write(f"**Summary:** {holland_assessment.get('summary', 'No summary provided.')}")
-    for score in holland_assessment.get('riasec_scores', []):
+    st.write(f"**Top Themes:** {', '.join(holland_assessment.top_themes)}")
+    st.write(f"**Summary:** {holland_assessment.summary}")
+    for score in holland_assessment.riasec_scores:
         st.markdown(
-            f"- **{score.get('theme')}:** {score.get('score')}/10 - {score.get('description')}"
+            f"- **{score.theme}:** {score.score}/10 - {score.description}"
         )
 
-    bar_chart, radar_chart = get_riasec_figures(profile.holland_code_assessment)
+    bar_chart, radar_chart = get_riasec_figures(holland_assessment)
     col1, col2 = st.columns(2)
     with col1:
         st.header("RIASEC Scores Bar Chart")
@@ -34,47 +30,42 @@ def display_holland_assessment(profile: CharacterProfile):
 
     st.markdown("---")
     with st.expander("Full holland assessment JSON"):
-        st.json(holland_assessment)
+        st.json(holland_assessment.model_dump())
 
 def display_diagnoses(profile: CharacterProfile):
-    """Renders the Diagnostic Impressions section."""
-    profile_dict = profile.model_dump()
-    diagnoses = profile_dict.get('diagnoses', [])
-
+    """Displays the diagnostic impressions."""
+    diagnoses = profile.diagnoses
     if not diagnoses:
         st.info("No formal diagnoses were assigned.")
-        return
+    else:
+        st.subheader("Diagnostic Impressions")
+        for dx in diagnoses:
+            # Check if dsm_code is present
+            title = f"{dx.disorder_name} ({dx.dsm_code})" if dx.dsm_code else dx.disorder_name
+            with st.expander(title):
+                st.write(f"**Category:** {dx.dsm_category}")
 
-    st.subheader("Diagnostic Impressions")
-    for dx in diagnoses:
-        with st.expander(f"{dx.get('disorder_name', 'N/A')} ({dx.get('dsm_code', 'N/A')})"):
-            st.write(f"**Category:** {dx.get('dsm_category', 'N/A')}")
+                if dx.specifiers:
+                    st.write("**Specifiers:**")
+                    for s in dx.specifiers:
+                        st.markdown(f"- {s.specifier_type}: {s.value}")
 
-            specifiers = dx.get('specifiers', [])
-            if specifiers:
-                st.write("**Specifiers:**")
-                for s in specifiers:
-                    st.markdown(f"- {s.get('specifier_type')}: {s.get('value')}")
+                st.write("**Criteria Met (Justification):**")
+                if dx.criteria_met:
+                    for c in dx.criteria_met:
+                        st.markdown(f"- {c}")
+                else:
+                    st.markdown("- None listed.")
 
-            st.write("**Criteria Met (Justification):**")
-            criteria = dx.get('criteria_met', [])
-            if criteria:
-                for c in criteria:
-                    st.markdown(f"- {c}")
-            else:
-                st.markdown("- None listed.")
+                st.write("**Functional Impairment:**")
+                st.write(dx.functional_impairment or 'Not specified.')
 
-            st.write("**Functional Impairment:**")
-            impairment = dx.get('functional_impairment', 'Not specified.')
-            st.write(impairment)
-
-            note = dx.get('diagnostic_note')
-            if note:
-                st.write("**Notes:**")
-                st.write(note)
-    st.markdown("---")
-    with st.expander("Full diagnoses JSON"):
-        st.json(diagnoses)
+                if dx.diagnostic_note:
+                    st.write("**Notes:**")
+                    st.write(dx.diagnostic_note)
+        st.markdown("---")
+        with st.expander("Full diagnoses JSON"):
+            st.json([d.model_dump() for d in diagnoses])
 
 def display_profile(profile: CharacterProfile):
     """Renders the character profile in the UI."""

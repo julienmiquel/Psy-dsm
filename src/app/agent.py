@@ -1,7 +1,6 @@
 """
-This module defines the LlmAgent used for interactive character diagnosis.
+This module defines the LLM agent for interactive character profiling.
 """
-
 from google.adk.agents import LlmAgent
 from app.models import CharacterProfile
 

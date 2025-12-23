@@ -1,4 +1,6 @@
-import pytest
+"""
+Tests for visualization functions.
+"""
 import matplotlib.pyplot as plt
 from app.models import HollandCode, HollandCodeAssessment
 from app.visualizations import get_riasec_figures
@@ -9,18 +11,42 @@ def test_get_riasec_figures():
     """
     # Sample Data
     sample_scores = [
-        HollandCode(theme="Realistic", score=8, description="Practical, hands-on, and tool-oriented."),
-        HollandCode(theme="Investigative", score=7, description="Analytical, intellectual, and scientific."),
-        HollandCode(theme="Artistic", score=9, description="Creative, original, and independent."),
-        HollandCode(theme="Social", score=4, description="Cooperative, supportive, and helping others."),
-        HollandCode(theme="Enterprising", score=6, description="Persuasive, energetic, and status-oriented."),
-        HollandCode(theme="Conventional", score=5, description="Organized, detail-oriented, and conforming.")
+        HollandCode(
+            theme="Realistic",
+            score=8,
+            description="Practical, hands-on, and tool-oriented."
+        ),
+        HollandCode(
+            theme="Investigative",
+            score=7,
+            description="Analytical, intellectual, and scientific."
+        ),
+        HollandCode(
+            theme="Artistic",
+            score=9,
+            description="Creative, original, and independent."
+        ),
+        HollandCode(
+            theme="Social",
+            score=4,
+            description="Cooperative, supportive, and helping others."
+        ),
+        HollandCode(
+            theme="Enterprising",
+            score=6,
+            description="Persuasive, energetic, and status-oriented."
+        ),
+        HollandCode(
+            theme="Conventional",
+            score=5,
+            description="Organized, detail-oriented, and conforming."
+        )
     ]
 
     assessment = HollandCodeAssessment(
         riasec_scores=sample_scores,
         top_themes=["Artistic", "Realistic", "Investigative"],
-        summary="This individual shows a strong inclination towards creative and practical pursuits."
+        summary="Summary."
     )
 
     bar_chart, radar_chart = get_riasec_figures(assessment)
@@ -39,7 +65,7 @@ def test_get_riasec_figures():
 
 def test_get_riasec_figures_no_assessment():
     """
-    Tests the get_riasec_figures function to ensure it returns None when the assessment is None.
+    Tests the get_riasec_figures function with None input.
     """
     bar_chart, radar_chart = get_riasec_figures(None)
 
