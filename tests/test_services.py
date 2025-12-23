@@ -1,4 +1,7 @@
-import os
+"""
+Tests for AI services.
+"""
+# pylint: disable=redefined-outer-name, unused-import, duplicate-code
 import pytest
 from app.services import generate_character_profile, generate_tcc_program
 from app.models import CharacterProfile, TCCProgram
@@ -41,15 +44,17 @@ def test_character_profile_stability(character_description):
     assert len(profiles) == num_runs
     for profile in profiles:
         assert isinstance(profile, CharacterProfile)
-        print(profile.holland_code_assessment.top_themes[0])
-        print("----")
+        # print(profile.holland_code_assessment.top_themes[0])
+        # print("----")
 
 
     # Check for consistency in top Holland Code themes
     first_holland_themes = sorted(profiles[0].holland_code_assessment.top_themes)
     for profile in profiles[1:]:
-        assert sorted(profile.holland_code_assessment.top_themes)[0] == first_holland_themes[0]
-        assert sorted(profile.holland_code_assessment.top_themes)[1] == first_holland_themes[1]
+        assert sorted(profile.holland_code_assessment.top_themes)[0] == \
+               first_holland_themes[0]
+        assert sorted(profile.holland_code_assessment.top_themes)[1] == \
+               first_holland_themes[1]
 
     # Check for consistency in diagnoses
     first_diagnoses = [d.disorder_name for d in profiles[0].diagnoses]
@@ -71,5 +76,4 @@ def test_generate_tcc_program(character_profile):
         assert len(module.activities) > 0
         assert module.title != ""
     assert tcc_program.title != ""
-    assert tcc_program.global_objective != ""   
-
+    assert tcc_program.global_objective != ""

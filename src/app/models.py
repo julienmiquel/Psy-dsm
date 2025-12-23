@@ -1,5 +1,8 @@
+"""Data models for the application."""
 from typing import List, Optional
 from pydantic import BaseModel, Field
+
+# pylint: disable=line-too-long, missing-class-docstring
 
 class DiagnosisSpecifier(BaseModel):
     specifier_type: str
@@ -45,8 +48,6 @@ class CharacterProfile(BaseModel):
     character_id: Optional[str] = None
     diagnoses: List[DiagnosisEntry] = Field(default_factory=list)
 
-
-
 class Activity(BaseModel):
     """Représente une intervention ou un exercice spécifique au sein d'un module."""
     title: str
@@ -68,3 +69,13 @@ class TCCProgram(BaseModel):
 class EvaluationResult(BaseModel):
     score: int = Field(description="The quality score from 1 (poor) to 5 (excellent).")
     rationale: str = Field(description="The rationale for the given score.")
+
+
+class PodcastSegment(BaseModel):
+    speaker: str = Field(description="The name of the speaker (e.g., Host, Guest, Psychologist).")
+    text: str = Field(description="The dialogue spoken by the speaker.")
+
+class PodcastScript(BaseModel):
+    title: str = Field(description="Podcast title.")
+    target_audience: str = Field(description="Target audience.")
+    segments: List[PodcastSegment] = Field(default_factory=list, description="Dialogue segments.")

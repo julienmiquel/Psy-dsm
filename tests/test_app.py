@@ -1,9 +1,10 @@
-import pytest
+"""
+Tests for the main application logic.
+"""
+# pylint: disable=duplicate-code
 from unittest.mock import patch, MagicMock
-
-# Import the functions and classes from your main application
-from app.models import CharacterProfile
-from app.services import generate_character_profile
+from app.models import CharacterProfile, TCCProgram
+from app.services import generate_character_profile, generate_tcc_program
 
 @patch('app.services.get_genai_client')
 def test_generate_character_profile_success(mock_get_genai_client):
@@ -30,9 +31,6 @@ def test_generate_character_profile_success(mock_get_genai_client):
     assert isinstance(profile, CharacterProfile)
     assert profile.character_name == "Test Character"
     assert profile.profile_date == "2024-01-01"
-
-from app.models import TCCProgram
-from app.services import generate_tcc_program
 
 @patch('app.services.get_genai_client')
 def test_generate_tcc_program_success(mock_get_genai_client):

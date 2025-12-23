@@ -1,3 +1,7 @@
+"""
+Tests for profile quality.
+"""
+# pylint: disable=line-too-long, redefined-outer-name, duplicate-code
 import pytest
 from app.services import generate_character_profile, evaluate_profile_with_llm
 from app.models import CharacterProfile, DiagnosisEntry, HollandCodeAssessment, HollandCode

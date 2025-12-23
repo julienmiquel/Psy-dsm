@@ -1,7 +1,10 @@
+"""
+This module provides visualization functions for RIASEC assessments.
+"""
+import os
 import matplotlib.pyplot as plt
 import numpy as np
-import os
-from .models import HollandCodeAssessment
+from app.models import HollandCodeAssessment
 
 def create_riasec_visualizations(assessment: HollandCodeAssessment, output_dir: str = "output"):
     """
@@ -16,10 +19,14 @@ def create_riasec_visualizations(assessment: HollandCodeAssessment, output_dir: 
 
     labels = [score.theme for score in assessment.riasec_scores]
     values = [score.score for score in assessment.riasec_scores]
-    
+
     # Bar Chart
     plt.figure(figsize=(10, 6))
-    plt.bar(labels, values, color=['#FF4136', '#FFDC00', '#0074D9', '#2ECC40', '#FF851B', '#B10DC9'])
+    plt.bar(
+        labels,
+        values,
+        color=['#FF4136', '#FFDC00', '#0074D9', '#2ECC40', '#FF851B', '#B10DC9']
+    )
     plt.title('RIASEC Scores')
     plt.xlabel('Theme')
     plt.ylabel('Score')
@@ -34,10 +41,11 @@ def create_riasec_visualizations(assessment: HollandCodeAssessment, output_dir: 
     values += values[:1]
     angles += angles[:1]
 
-    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+    # pylint: disable=unused-variable
+    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw={'polar': True})
     ax.fill(angles, values, color='red', alpha=0.25)
     ax.plot(angles, values, color='red', linewidth=2)
-    
+
     ax.set_yticklabels([])
     ax.set_xticks(angles[:-1])
     ax.set_xticklabels(labels)
@@ -64,10 +72,14 @@ def get_riasec_figures(assessment: HollandCodeAssessment):
         return None, None
     labels = [score.theme for score in assessment.riasec_scores]
     values = [score.score for score in assessment.riasec_scores]
-    
+
     # Bar Chart
     bar_fig, bar_ax = plt.subplots(figsize=(10, 6))
-    bar_ax.bar(labels, values, color=['#FF4136', '#FFDC00', '#0074D9', '#2ECC40', '#FF851B', '#B10DC9'])
+    bar_ax.bar(
+        labels,
+        values,
+        color=['#FF4136', '#FFDC00', '#0074D9', '#2ECC40', '#FF851B', '#B10DC9']
+    )
     bar_ax.set_title('RIASEC Scores')
     bar_ax.set_xlabel('Theme')
     bar_ax.set_ylabel('Score')
@@ -79,10 +91,10 @@ def get_riasec_figures(assessment: HollandCodeAssessment):
     radar_values = values + values[:1]
     radar_angles = angles + angles[:1]
 
-    radar_fig, radar_ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+    radar_fig, radar_ax = plt.subplots(figsize=(8, 8), subplot_kw={'polar': True})
     radar_ax.fill(radar_angles, radar_values, color='red', alpha=0.25)
     radar_ax.plot(radar_angles, radar_values, color='red', linewidth=2)
-    
+
     radar_ax.set_yticklabels([])
     radar_ax.set_xticks(angles)
     radar_ax.set_xticklabels(labels)
