@@ -1,15 +1,18 @@
+"""
+Tests for batch processing.
+"""
 import os
 import json
-import pytest
-from app.batch import batch_process
 from unittest.mock import patch
+from app.batch import batch_process
 from app.models import CharacterProfile
 
 def test_batch_process(tmp_path):
+    """Test batch processing of character descriptions."""
     input_file = tmp_path / "input.txt"
     output_file = tmp_path / "output.json"
 
-    with open(input_file, "w") as f:
+    with open(input_file, "w", encoding='utf-8') as f:
         f.write("Test character 1\n")
         f.write("Test character 2\n")
 
@@ -26,6 +29,6 @@ def test_batch_process(tmp_path):
 
     assert os.path.exists(output_file)
 
-    with open(output_file, "r") as f:
+    with open(output_file, "r", encoding='utf-8') as f:
         profile = json.load(f)
         assert profile["character_name"] == "Test Character"

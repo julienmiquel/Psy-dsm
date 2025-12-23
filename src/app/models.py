@@ -1,5 +1,8 @@
+"""Data models for the application."""
 from typing import List, Optional
 from pydantic import BaseModel, Field
+
+# pylint: disable=line-too-long, missing-class-docstring
 
 class DiagnosisSpecifier(BaseModel):
     specifier_type: str
@@ -32,8 +35,6 @@ class CharacterProfile(BaseModel):
     holland_code_assessment: Optional[HollandCodeAssessment] = Field(None, description="Holland Code (RIASEC) assessment results.")
     character_id: Optional[str] = None
     diagnoses: List[DiagnosisEntry] = Field(default_factory=list)
-
-
 
 class Activity(BaseModel):
     """Représente une intervention ou un exercice spécifique au sein d'un module."""

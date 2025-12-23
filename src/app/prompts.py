@@ -5,6 +5,7 @@ from datetime import date
 
 def get_system_prompt_profile() -> str:
     """Returns the system prompt for profile generation."""
+    # pylint: disable=line-too-long
     return f"""
 You are a clinical psychologist and career counselor. Your task is to analyze the provided character description and generate a clinical profile in JSON format.
 

@@ -1,8 +1,12 @@
+"""
+This module defines the LLM agent for interactive character profiling.
+"""
+# pylint: disable=import-error, no-name-in-module
 from google.adk.agents import LlmAgent
-from .models import CharacterProfile
+from app.models import CharacterProfile
 
 # The instruction for the agent.
-instruction = """
+INSTRUCTION = """
 You are a clinical psychologist and career counselor.
 Your task is to ask the user clarifying questions to build a comprehensive character profile.
 This includes:
@@ -16,6 +20,6 @@ Once your analysis is complete, you MUST return a valid `CharacterProfile` objec
 # Create the agent.
 agent = LlmAgent(
     name="pathology_agent",
-    instruction=instruction,
+    instruction=INSTRUCTION,
     output_schema=CharacterProfile,
 )
