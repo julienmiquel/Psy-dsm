@@ -4,6 +4,7 @@ This module provides services for generating character profiles, TCC programs, a
 import os
 from google import genai
 from google.genai import types
+
 from app.models import CharacterProfile, TCCProgram, EvaluationResult, PodcastScript
 from app.prompts import (
     get_system_prompt_profile,

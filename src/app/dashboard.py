@@ -35,6 +35,25 @@ def display_holland_assessment(profile: CharacterProfile):
     with st.expander("Full holland assessment JSON"):
         st.json(holland_assessment.model_dump())
 
+def display_ocean_assessment(profile: CharacterProfile):
+    """Displays the Big 5 (OCEAN) personality assessment."""
+    ocean_assessment = profile.ocean_assessment
+    if not ocean_assessment:
+        return
+
+    st.subheader("Big 5 (OCEAN) Assessment")
+    st.write(f"**Summary:** {ocean_assessment.summary}")
+
+    cols = st.columns(5)
+    for i, trait in enumerate(ocean_assessment.ocean_scores):
+        with cols[i]:
+            st.metric(label=trait.trait, value=f"{trait.score}/10", delta=trait.level)
+            st.caption(trait.description)
+
+    st.markdown("---")
+    with st.expander("Full OCEAN assessment JSON"):
+        st.json(ocean_assessment.model_dump())
+
 def display_diagnoses(profile: CharacterProfile):
     """Displays the diagnostic impressions."""
     diagnoses = profile.diagnoses
@@ -85,4 +104,5 @@ def display_profile(profile: CharacterProfile):
     st.write(summary)
 
     display_holland_assessment(profile)
+    display_ocean_assessment(profile)
     display_diagnoses(profile)

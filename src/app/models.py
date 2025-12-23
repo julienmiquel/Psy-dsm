@@ -28,11 +28,23 @@ class HollandCodeAssessment(BaseModel):
     top_themes: List[str] = Field(description="The top 2-3 RIASEC themes that best fit the character.")
     summary: str = Field(description="A summary of the Holland Code assessment.")
 
+class OceanTrait(BaseModel):
+    trait: str = Field(description="The trait name (e.g., 'Openness').")
+    score: int = Field(description="Score for the trait (typically 1-100 or 1-10).")
+    level: str = Field(description="Level of the trait (e.g., 'Low', 'Medium', 'High').")
+    description: str = Field(description="Brief description of the trait manifestation in the character.")
+
+class OceanAssessment(BaseModel):
+    """Represents a Big 5 (OCEAN) personality assessment."""
+    ocean_scores: List[OceanTrait] = Field(default_factory=list, description="List of OCEAN traits and scores.")
+    summary: str = Field(description="A summary of the Big 5 assessment.")
+
 class CharacterProfile(BaseModel):
     character_name: str
     profile_date: str = Field(description="Date of profile generation in YYYY-MM-DD format")
     overall_assessment_summary: Optional[str] = Field(None, description="A brief summary of the clinical assessment")
     holland_code_assessment: Optional[HollandCodeAssessment] = Field(None, description="Holland Code (RIASEC) assessment results.")
+    ocean_assessment: Optional[OceanAssessment] = Field(None, description="Big 5 (OCEAN) personality assessment results.")
     character_id: Optional[str] = None
     diagnoses: List[DiagnosisEntry] = Field(default_factory=list)
 
