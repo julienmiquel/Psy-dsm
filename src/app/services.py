@@ -2,6 +2,7 @@
 This module provides services for generating character profiles, TCC programs, and podcast scripts.
 """
 import os
+import functools
 from google import genai
 from google.genai import types
 
@@ -13,6 +14,7 @@ from app.prompts import (
     SYSTEM_PROMPT_PODCAST
 )
 
+@functools.lru_cache(maxsize=None)
 def get_genai_client() -> genai.Client:
     """Returns a configured Gemini API client."""
     client = genai.Client(
