@@ -30,5 +30,8 @@ def test_batch_process(tmp_path):
     assert os.path.exists(output_file)
 
     with open(output_file, "r", encoding='utf-8') as f:
-        profile = json.load(f)
-        assert profile["character_name"] == "Test Character"
+        profiles = json.load(f)
+        assert isinstance(profiles, list)
+        assert len(profiles) == 2
+        assert profiles[0]["character_name"] == "Test Character"
+        assert profiles[1]["character_name"] == "Test Character"
