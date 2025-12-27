@@ -6,6 +6,7 @@ from google import genai
 from google.genai import types
 
 from app.models import CharacterProfile, TCCProgram, EvaluationResult, PodcastScript
+import streamlit as st
 from app.prompts import (
     get_system_prompt_profile,
     SYSTEM_PROMPT_TCC,
@@ -13,6 +14,7 @@ from app.prompts import (
     SYSTEM_PROMPT_PODCAST
 )
 
+@st.cache_resource
 def get_genai_client() -> genai.Client:
     """Returns a configured Gemini API client."""
     client = genai.Client(
@@ -70,6 +72,7 @@ def generate_podcast_script(
 
     return response.parsed
 
+@st.cache_data
 def generate_character_profile(
     description: str, model_id: str) -> CharacterProfile:
     """
