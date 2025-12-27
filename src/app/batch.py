@@ -9,20 +9,31 @@ from app.services import generate_character_profile
 def batch_process(input_file: str, output_file: str, model_id: str):
     """
     Processes character descriptions from an input file and writes the generated
-    profiles to an output file.
+    profiles to an output file as a JSON array.
     """
 
     with open(input_file, 'r', encoding='utf-8') as f_in, \
          open(output_file, 'w', encoding='utf-8') as f_out:
-        description = ". ".join(f_in.readlines()).strip()
 
-        print(f"Processing description: {description[:50]}...")
-        try:
-            profile = generate_character_profile(description, model_id)
-            f_out.write(profile.model_dump_json(indent=2))
-        except Exception as e: # pylint: disable=broad-exception-caught
-            print(f"Error processing description: {description[:50]}... Error: {e}")
+        f_out.write("[\n")
+        first = True
 
+        for line in f_in:
+            description = line.strip()
+            if not description:
+                continue
+
+            print(f"Processing description: {description[:50]}...")
+            try:
+                profile = generate_character_profile(description, model_id)
+                if not first:
+                    f_out.write(",\n")
+                f_out.write(profile.model_dump_json(indent=2))
+                first = False
+            except Exception as e: # pylint: disable=broad-exception-caught
+                print(f"Error processing description: {description[:50]}... Error: {e}")
+
+        f_out.write("\n]")
 if __name__ == "__main__":
     load_dotenv()
     parser = argparse.ArgumentParser(description="Batch process character descriptions.")
