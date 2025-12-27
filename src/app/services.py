@@ -5,12 +5,19 @@ import os
 from google import genai
 from google.genai import types
 
-from app.models import CharacterProfile, TCCProgram, EvaluationResult, PodcastScript
+from app.models import (
+    CharacterProfile,
+    TCCProgram,
+    EvaluationResult,
+    PodcastScript,
+    AudioAnalysisResult
+)
 from app.prompts import (
     get_system_prompt_profile,
     SYSTEM_PROMPT_TCC,
     SYSTEM_PROMPT_JUDGE,
-    SYSTEM_PROMPT_PODCAST
+    SYSTEM_PROMPT_PODCAST,
+    SYSTEM_PROMPT_AUDIO_ANALYSIS
 )
 
 def get_genai_client() -> genai.Client:
@@ -39,6 +46,30 @@ def generate_tcc_program(
     response = client.models.generate_content(
         model=model_id,
         contents=prompt,
+        config=generation_config,
+    )
+
+    return response.parsed
+
+def analyze_audio(audio_bytes: bytes, mime_type: str, model_id: str) -> AudioAnalysisResult:
+    """
+    Analyzes an audio file for diarization, emotional tone, and dark patterns.
+    """
+    client = get_genai_client()
+
+    generation_config = types.GenerateContentConfig(
+        response_schema=AudioAnalysisResult,
+        response_mime_type="application/json",
+        temperature=0.2,
+        top_p=1,
+        max_output_tokens=8192,
+    )
+
+    audio_part = types.Part.from_bytes(data=audio_bytes, mime_type=mime_type)
+
+    response = client.models.generate_content(
+        model=model_id,
+        contents=[SYSTEM_PROMPT_AUDIO_ANALYSIS, audio_part],
         config=generation_config,
     )
 
