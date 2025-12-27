@@ -138,3 +138,35 @@ class PodcastScript(BaseModel):
         default_factory=list,
         description="Dialogue segments."
     )
+
+class DarkPattern(BaseModel):
+    """
+    Represents a detected dark pattern, manipulation, or lie in a sentence.
+    """
+    type: str = Field(description="Type of dark pattern, manipulation, or lie.")
+    description: str = Field(
+        description="Explanation of why this is considered a dark pattern or lie."
+    )
+    confidence: str = Field(description="Confidence level: Low, Medium, High.")
+
+class SentenceAnalysis(BaseModel):
+    """
+    Represents the analysis of a single sentence in the audio.
+    Includes diarization, transcription, emotion, and dark patterns.
+    """
+    speaker_label: str = Field(description="Label of the speaker, e.g., Speaker 1, Speaker 2")
+    text: str = Field(description="The transcribed text of the sentence")
+    emotional_tone: str = Field(description="The emotional tone conveyed in the sentence")
+    dark_patterns: List[DarkPattern] = Field(
+        description="Potential dark patterns, manipulation, or lies detected",
+        default_factory=list
+    )
+
+class AudioAnalysisResult(BaseModel):
+    """
+    Represents the full analysis of the audio file.
+    """
+    segments: List[SentenceAnalysis] = Field(description="List of analyzed sentence segments.")
+    overall_assessment: str = Field(
+        description="Overall assessment of the conversation, speakers, and dynamics."
+    )

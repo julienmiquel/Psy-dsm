@@ -1,13 +1,58 @@
 """Main Streamlit application."""
 import streamlit as st
 from dotenv import load_dotenv
-from app.services import generate_character_profile, generate_tcc_program, generate_podcast_script
+from app.services import (
+    generate_character_profile,
+    generate_tcc_program,
+    generate_podcast_script,
+    analyze_audio
+)
 from app.dashboard import display_profile
 
 load_dotenv()
 st.set_page_config(layout="wide")
 
+st.sidebar.title("Audio Analysis")
+uploaded_file = st.sidebar.file_uploader(
+    "Upload Audio for Analysis", type=['mp3', 'wav', 'm4a', 'ogg']
+)
+
+if uploaded_file is not None:
+    if st.sidebar.button("Analyze Audio"):
+        with st.sidebar.status("Analyzing audio...", expanded=True) as status:
+            try:
+                # Read file bytes
+                audio_bytes = uploaded_file.getvalue()
+                mime_type = uploaded_file.type
+
+                # Analyze
+                analysis_result = analyze_audio(audio_bytes, mime_type, "gemini-2.5-pro")
+                st.session_state['audio_analysis'] = analysis_result
+                status.update(label="Analysis complete!", state="complete", expanded=False)
+            except Exception as e: # pylint: disable=broad-exception-caught
+                status.update(label="Analysis failed!", state="error")
+                st.sidebar.error(f"Error: {e}")
+
 st.title("DSM-5 Character Profile Generator")
+
+if 'audio_analysis' in st.session_state:
+    result = st.session_state['audio_analysis']
+    st.header("Audio Analysis Report")
+
+    st.subheader("Overall Assessment")
+    st.info(result.overall_assessment)
+
+    st.subheader("Transcript & Analysis")
+    for segment in result.segments:
+        with st.chat_message(segment.speaker_label):
+            st.write(f"**{segment.speaker_label}**: {segment.text}")
+            st.caption(f"Tone: {segment.emotional_tone}")
+
+            if segment.dark_patterns:
+                for dp in segment.dark_patterns:
+                    st.error(f"⚠️ **{dp.type}** ({dp.confidence}): {dp.description}")
+    st.markdown("---")
+
 
 description = st.text_area(
     "Character Description",
