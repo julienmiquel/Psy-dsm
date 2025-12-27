@@ -3,6 +3,7 @@ This module provides services for generating character profiles, TCC programs, a
 """
 import os
 import functools
+import streamlit as st
 from google import genai
 from google.genai import types
 
@@ -72,6 +73,7 @@ def generate_podcast_script(
 
     return response.parsed
 
+@st.cache_data
 def generate_character_profile(
     description: str, model_id: str) -> CharacterProfile:
     """
