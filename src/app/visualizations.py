@@ -17,8 +17,11 @@ def create_riasec_visualizations(assessment: HollandCodeAssessment, output_dir: 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    labels = [score.theme for score in assessment.riasec_scores]
-    values = [score.score for score in assessment.riasec_scores]
+    labels = []
+    values = []
+    for score in assessment.riasec_scores:
+        labels.append(score.theme)
+        values.append(score.score)
 
     # Bar Chart
     plt.figure(figsize=(10, 6))
@@ -70,8 +73,11 @@ def get_riasec_figures(assessment: HollandCodeAssessment):
     """
     if assessment is None:
         return None, None
-    labels = [score.theme for score in assessment.riasec_scores]
-    values = [score.score for score in assessment.riasec_scores]
+    labels = []
+    values = []
+    for score in assessment.riasec_scores:
+        labels.append(score.theme)
+        values.append(score.score)
 
     # Bar Chart
     bar_fig, bar_ax = plt.subplots(figsize=(10, 6))
