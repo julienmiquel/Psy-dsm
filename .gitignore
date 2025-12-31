@@ -206,8 +206,7 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-tests/output_fr_1.json
-tests/output_fr.json
-tests/output.json
-tests/input_psy.txt
-tests/input.txt
+tests/*.json
+tests/*.txt
+tests/*.md
+output/**

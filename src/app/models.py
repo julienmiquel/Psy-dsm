@@ -139,6 +139,15 @@ class PodcastScript(BaseModel):
         description="Dialogue segments."
     )
 
+class SleepcastScript(PodcastScript):
+    """
+    Represents a specific Sleepcast script, including music prompts.
+    Inherits from PodcastScript.
+    """
+    music_prompt: str = Field(
+        description="A specific prompt for the music generation model (e.g. Lyria)."
+    )
+
 class DarkPattern(BaseModel):
     """
     Represents a detected dark pattern, manipulation, or lie in a sentence.
